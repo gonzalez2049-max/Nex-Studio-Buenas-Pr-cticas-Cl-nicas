@@ -144,6 +144,13 @@ export function ProjectDetailPage() {
         actions={
           <div className="flex items-center gap-2">
             <StateBadge status={project.status} />
+            <Button
+              size="sm"
+              onClick={() => navigate(`/proyectos/${project.id}/editor`)}
+            >
+              <Icon name="PenTool" className="h-4 w-4" />
+              {canEdit ? 'Abrir editor' : 'Ver en editor'}
+            </Button>
             {project.status === 'publicado' && (
               <>
                 <Button variant="outline" size="sm" onClick={share}>
@@ -256,24 +263,29 @@ export function ProjectDetailPage() {
                 </CardContent>
               </Card>
 
-              {/* Lienzo (placeholder de la fase editor) */}
+              {/* Lienzo del editor visual */}
               <Card>
                 <CardContent className="p-6">
                   <div
                     className="mx-auto flex max-w-md items-center justify-center rounded-lg border-2 border-dashed bg-muted/40 text-center"
                     style={{ aspectRatio: formatDef?.ratio ?? '1 / 1.414' }}
                   >
-                    <div className="space-y-2 p-6">
+                    <div className="space-y-3 p-6">
                       <Icon
                         name={formatDef?.icon ?? 'FileText'}
-                        className="mx-auto h-8 w-8 text-muted-foreground"
+                        className="mx-auto h-8 w-8 text-primary"
                       />
-                      <p className="text-sm font-medium">Lienzo del editor</p>
-                      <p className="text-xs text-muted-foreground">
-                        El editor visual tipo estudio se habilita en la próxima
-                        fase. La estructura, el flujo y la persistencia ya
-                        funcionan.
+                      <p className="text-sm font-medium">
+                        Editor visual de {FORMAT_LABELS[project.format]}
                       </p>
+                      <p className="text-xs text-muted-foreground">
+                        Diseña con lienzo, capas, herramientas y exportación
+                        propias de este formato.
+                      </p>
+                      <Button onClick={() => navigate(`/proyectos/${project.id}/editor`)}>
+                        <Icon name="PenTool" className="h-4 w-4" />
+                        Abrir editor
+                      </Button>
                     </div>
                   </div>
                 </CardContent>

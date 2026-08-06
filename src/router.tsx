@@ -1,8 +1,29 @@
+import { lazy, Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
 import { ProtectedRoute, RoleGate } from '@/components/auth/ProtectedRoute'
 import { PERMISSIONS } from '@/lib/domain'
 import { LoginPage } from '@/pages/Login'
+
+// El editor (Konva + exportadores) se carga bajo demanda para no penalizar
+// el arranque de la aplicación.
+const EditorPage = lazy(() =>
+  import('@/pages/Editor').then((m) => ({ default: m.EditorPage })),
+)
+
+function EditorLoader() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      }
+    >
+      <EditorPage />
+    </Suspense>
+  )
+}
 import { DashboardPage } from '@/pages/Dashboard'
 import { CreateMaterialPage } from '@/pages/CreateMaterial'
 import { MyProjectsPage } from '@/pages/MyProjects'
@@ -17,6 +38,14 @@ import { NotFoundPage } from '@/pages/NotFound'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
+  {
+    path: '/proyectos/:id/editor',
+    element: (
+      <ProtectedRoute>
+        <EditorLoader />
+      </ProtectedRoute>
+    ),
+  },
   {
     path: '/',
     element: (

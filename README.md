@@ -5,10 +5,10 @@ descargar** materiales de transferencia del conocimiento de la Unidad de Buenas
 Prácticas Clínicas (UBPC). No es una biblioteca ni una maqueta: funciona como un
 estudio editorial con un flujo de trabajo real, roles, permisos y persistencia.
 
-> **Estado de esta fase.** Están implementados la **arquitectura, la navegación,
-> la base de datos, los roles, los proyectos, el flujo editorial y la
-> persistencia real**. El **editor visual** (lienzo tipo Canva) se aborda en la
-> siguiente fase; su lugar ya está integrado en el detalle del proyecto.
+> **Estado.** Implementados la **arquitectura, la navegación, la base de datos,
+> los roles, los proyectos, el flujo editorial y la persistencia real**, además
+> del **editor visual funcional** con lienzo, capas, herramientas y exportación
+> propias de cada formato (PNG/PDF/PPTX).
 
 ## Stack
 
@@ -17,6 +17,35 @@ estudio editorial con un flujo de trabajo real, roles, permisos y persistencia.
 - **Supabase**: autenticación, PostgreSQL, RLS y almacenamiento
 - **TanStack Query** para datos y persistencia
 - **React Router** para la navegación
+- **Konva / react-konva** para el lienzo del editor
+- **Zustand** para el estado del editor (historial, selección, capas)
+- **PptxGenJS · jsPDF · html-to-image** para la exportación
+
+## Editor
+
+Cada formato tiene **dimensiones, estructura, herramientas y exportación
+propias** (`src/editor/formats.ts`): no se comparte un lienzo genérico.
+
+- **Barra superior**: guardar, autoguardado, deshacer/rehacer, vista previa,
+  compartir, revisar y descargar (PNG / PDF / PPTX editable).
+- **Panel izquierdo**: estructura del formato, texto, figuras, iconos clínicos,
+  imágenes, logos, QR, tablas, gráficos, fondos y recursos.
+- **Lienzo central** (Konva): arrastrar, redimensionar, rotar, duplicar,
+  agrupar, bloquear, alinear, distribuir, capas, guías de alineación, marco de
+  selección y zoom.
+- **Panel derecho**: tipografía, tamaño, color, opacidad, bordes, sombras,
+  posición, dimensiones, recorte y editores de tabla/gráfico.
+- **Presentaciones y kits** tienen panel de páginas/diapositivas con miniaturas,
+  reordenar, duplicar y añadir.
+
+Todo permanece **editable**: el diseño se guarda como JSON en
+`projects.content` y nunca se aplana a imagen. El PPTX se exporta con objetos
+**nativos** de PowerPoint (cuadros de texto, formas, imágenes, tablas y
+gráficos), de modo que sigue siendo editable tras la descarga.
+
+Formatos con editor: presentación, infografía, tríptico/díptico, Kit Champion,
+checklist, boletín EVI, cápsula, afiche, tarjeta/ficha, flujograma, mapa mental,
+reloj de posición y documento.
 
 ## Secciones
 
@@ -101,6 +130,7 @@ src/
     projects/    Tarjeta, barra de flujo y panel de observaciones
     auth/        Guardas de ruta y de rol
   contexts/      Autenticación y tema
+  editor/        Motor del editor: modelo, formatos, store, componentes y exportación
   hooks/         Hooks de React Query y de toast
   lib/           Dominio (roles/estados/formatos), API, Supabase, utilidades
   pages/         Una página por sección
