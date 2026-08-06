@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { PageHeader } from '@/components/common/PageHeader'
+import { ModuleHero } from '@/components/common/ModuleHero'
 import { ConfigNotice } from '@/components/common/ConfigNotice'
 import { EmptyState } from '@/components/common/EmptyState'
 import { Icon } from '@/components/common/Icon'
@@ -31,6 +31,7 @@ import {
 } from '@/hooks/queries'
 import { useToast } from '@/hooks/use-toast'
 import { FORMAT_LABELS } from '@/lib/domain'
+import { MODULES } from '@/lib/modules'
 import { shortDate } from '@/lib/format'
 
 const CHANNELS = [
@@ -87,16 +88,22 @@ export function TransferLogPage() {
 
   return (
     <>
-      <PageHeader
+      <ModuleHero
+        module={MODULES.transferencia}
+        eyebrow="Trazabilidad"
         title="Registro de transferencia"
-        description="Evidencia de la difusión y el alcance de los materiales publicados."
+        subtitle="Evidencia de la difusión y el alcance de los materiales publicados."
+        compact
         actions={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <button
+                className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold shadow-lg transition-transform hover:-translate-y-0.5"
+                style={{ color: MODULES.transferencia.color }}
+              >
                 <Icon name="Plus" className="h-4 w-4" />
                 Registrar transferencia
-              </Button>
+              </button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>

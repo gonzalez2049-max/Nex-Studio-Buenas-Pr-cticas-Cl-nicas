@@ -76,12 +76,18 @@ export function EditorTopbar(props: Props) {
   }
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background px-3">
+    <header className="z-20 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur surface">
       <Button variant="ghost" size="icon" onClick={props.onBack} title="Volver">
         <ArrowLeft className="h-5 w-5" />
       </Button>
+      <div
+        className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white sm:flex"
+        style={{ background: 'linear-gradient(135deg,#0d9488,#0891b2)' }}
+      >
+        <span className="text-sm font-bold leading-none">N</span>
+      </div>
       <div className="flex min-w-0 flex-col">
-        <span className="truncate text-sm font-medium">{props.title}</span>
+        <span className="truncate text-sm font-semibold">{props.title}</span>
         <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
           {props.saving ? (
             <>
@@ -124,19 +130,22 @@ export function EditorTopbar(props: Props) {
         Autoguardado
       </button>
 
-      <div className="ml-auto flex items-center gap-1.5">
-        <Button variant="ghost" size="sm" onClick={props.onPreview}>
-          <Eye className="h-4 w-4" />
-          Vista previa
-        </Button>
-        <Button variant="ghost" size="sm" onClick={props.onReview}>
-          <ClipboardCheck className="h-4 w-4" />
-          Revisar
-        </Button>
-        <Button variant="ghost" size="sm" onClick={props.onShare}>
-          <Share2 className="h-4 w-4" />
-          Compartir
-        </Button>
+      <div className="ml-auto flex items-center gap-2">
+        {/* Acciones secundarias agrupadas */}
+        <div className="hidden items-center rounded-lg bg-muted/70 p-0.5 md:flex">
+          <Button variant="ghost" size="sm" className="h-8" onClick={props.onPreview}>
+            <Eye className="h-4 w-4" />
+            Vista previa
+          </Button>
+          <Button variant="ghost" size="sm" className="h-8" onClick={props.onReview}>
+            <ClipboardCheck className="h-4 w-4" />
+            Revisar
+          </Button>
+          <Button variant="ghost" size="sm" className="h-8" onClick={props.onShare}>
+            <Share2 className="h-4 w-4" />
+            Compartir
+          </Button>
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

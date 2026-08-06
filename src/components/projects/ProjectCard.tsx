@@ -25,9 +25,9 @@ export function ProjectCard({
   return (
     <Link
       to={`/proyectos/${project.id}`}
-      className="group flex flex-col overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md"
+      className="group flex flex-col overflow-hidden rounded-2xl border bg-card surface transition-all hover:-translate-y-0.5 hover:surface-lg"
     >
-      <div className="relative flex h-32 items-center justify-center bg-gradient-to-br from-primary/10 to-accent">
+      <div className="relative flex h-32 items-center justify-center bg-gradient-to-br from-primary/15 via-accent to-accent">
         <Icon
           name={iconFor(project.format)}
           className="h-10 w-10 text-primary/70"

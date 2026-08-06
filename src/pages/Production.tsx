@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { PageHeader } from '@/components/common/PageHeader'
+import { ModuleHero } from '@/components/common/ModuleHero'
 import { ConfigNotice } from '@/components/common/ConfigNotice'
 import { Icon } from '@/components/common/Icon'
 import { Card, CardContent } from '@/components/ui/card'
@@ -12,6 +12,7 @@ import {
   STATE_LABELS,
   type ProjectState,
 } from '@/lib/domain'
+import { MODULES } from '@/lib/modules'
 import { relativeDate } from '@/lib/format'
 
 /** Columnas del tablero de producción (flujo editorial). */
@@ -33,9 +34,12 @@ export function ProductionPage() {
 
   return (
     <>
-      <PageHeader
+      <ModuleHero
+        module={MODULES.administracion}
+        eyebrow="Panel de la unidad"
         title="Producción UBPC"
-        description="Visión global de la línea de producción editorial de la unidad."
+        subtitle="Visión global de la línea de producción editorial de la unidad."
+        compact
       />
       <ConfigNotice />
 

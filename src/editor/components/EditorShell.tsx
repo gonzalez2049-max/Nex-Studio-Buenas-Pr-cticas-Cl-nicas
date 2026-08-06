@@ -75,7 +75,7 @@ export function EditorShell({ onSave }: { onSave: () => void }) {
       {showPages && <PagesPanel />}
 
       {/* Área del lienzo */}
-      <div className="relative flex min-w-0 flex-1 flex-col bg-muted/50">
+      <div className="editor-stage-bg relative flex min-w-0 flex-1 flex-col">
         <div className="flex-1 overflow-auto scrollbar-thin">
           <div className="flex min-h-full items-start justify-center p-10">
             <CanvasStage />

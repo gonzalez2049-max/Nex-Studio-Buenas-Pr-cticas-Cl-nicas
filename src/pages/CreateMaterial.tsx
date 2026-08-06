@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { PageHeader } from '@/components/common/PageHeader'
+import { ModuleHero } from '@/components/common/ModuleHero'
 import { Icon } from '@/components/common/Icon'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useCreateProject, useTemplates } from '@/hooks/queries'
 import { useToast } from '@/hooks/use-toast'
 import { FORMAT_DEFS, type MaterialFormat } from '@/lib/domain'
+import { MODULES } from '@/lib/modules'
 import { cn } from '@/lib/utils'
 import type { Template } from '@/types/database'
 
@@ -81,9 +82,12 @@ export function CreateMaterialPage() {
 
   return (
     <>
-      <PageHeader
+      <ModuleHero
+        module={MODULES.crear}
+        eyebrow="Nuevo material"
         title="Crear material"
-        description="Sigue el flujo institucional: elige un formato, parte de una plantilla o desde cero, y completa los datos."
+        subtitle="Elige un formato, parte de una plantilla o desde cero, y completa los datos. El editor se adapta a cada tipo."
+        compact
       />
 
       {/* Indicador de pasos */}

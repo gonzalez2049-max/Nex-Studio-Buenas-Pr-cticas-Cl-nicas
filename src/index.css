@@ -80,9 +80,53 @@
   * {
     @apply border-border;
   }
+  html {
+    font-size: 16.5px;
+  }
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: 'rlig' 1, 'calt' 1;
+    letter-spacing: -0.011em;
+  }
+  h1, h2, h3 {
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  /* Fondo de la aplicación con profundidad (degradado sutil, tema claro/oscuro). */
+  .app-canvas {
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(60rem 60rem at 110% -10%, hsl(var(--primary) / 0.06), transparent 60%),
+      radial-gradient(50rem 50rem at -10% 110%, hsl(217 91% 60% / 0.05), transparent 55%);
+  }
+  /* Sombra suave y elevada para tarjetas de superficie. */
+  .surface {
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.04),
+      0 8px 24px -12px rgba(15, 23, 42, 0.14);
+  }
+  .surface-lg {
+    box-shadow:
+      0 1px 3px rgba(15, 23, 42, 0.05),
+      0 24px 48px -24px rgba(15, 23, 42, 0.28);
+  }
+  .dark .surface,
+  .dark .surface-lg {
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      0 20px 40px -20px rgba(0, 0, 0, 0.6);
+  }
+  /* Mesa de trabajo del editor: rejilla de puntos con profundidad. */
+  .editor-stage-bg {
+    background-color: hsl(var(--muted));
+    background-image: radial-gradient(
+      hsl(var(--muted-foreground) / 0.18) 1px,
+      transparent 1px
+    );
+    background-size: 22px 22px;
+    background-position: -1px -1px;
   }
 }
 

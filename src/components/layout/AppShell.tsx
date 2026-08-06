@@ -10,7 +10,7 @@ export function AppShell() {
   const [mobileOpen, setMobileOpen] = React.useState(false)
 
   return (
-    <div className="flex min-h-screen bg-muted/30">
+    <div className="app-canvas flex min-h-screen">
       {/* Sidebar fijo (escritorio) */}
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-sidebar lg:flex">
         <SidebarBrand />
@@ -47,8 +47,8 @@ export function AppShell() {
       {/* Contenido */}
       <div className={cn('flex min-h-screen flex-1 flex-col lg:pl-64')}>
         <Topbar onMenuClick={() => setMobileOpen(true)} />
-        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mx-auto w-full max-w-6xl space-y-6">
+        <main className="flex-1 px-4 py-7 sm:px-6 lg:px-10">
+          <div className="mx-auto w-full max-w-6xl space-y-7">
             <Outlet />
           </div>
         </main>

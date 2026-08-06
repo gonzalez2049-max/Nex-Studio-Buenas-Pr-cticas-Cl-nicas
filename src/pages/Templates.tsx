@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { PageHeader } from '@/components/common/PageHeader'
+import { ModuleHero } from '@/components/common/ModuleHero'
 import { ConfigNotice } from '@/components/common/ConfigNotice'
 import { EmptyState } from '@/components/common/EmptyState'
 import { Icon } from '@/components/common/Icon'
@@ -23,6 +23,7 @@ import {
   PERMISSIONS,
   type MaterialFormat,
 } from '@/lib/domain'
+import { MODULES } from '@/lib/modules'
 import type { Template } from '@/types/database'
 
 export function TemplatesPage() {
@@ -58,30 +59,34 @@ export function TemplatesPage() {
 
   return (
     <>
-      <PageHeader
+      <ModuleHero
+        module={MODULES.plantillas}
+        eyebrow="Biblioteca"
         title="Plantillas"
-        description="Modelos institucionales validados para acelerar la producción de materiales."
-        actions={
-          <Select
-            value={format}
-            onValueChange={(v) => setFormat(v as MaterialFormat | 'all')}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Formato" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los formatos</SelectItem>
-              {FORMAT_DEFS.map((f) => (
-                <SelectItem key={f.id} value={f.id}>
-                  {f.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        }
+        subtitle="Modelos institucionales validados para acelerar la producción de materiales."
+        compact
       />
 
       <ConfigNotice />
+
+      <div className="flex items-center justify-end">
+        <Select
+          value={format}
+          onValueChange={(v) => setFormat(v as MaterialFormat | 'all')}
+        >
+          <SelectTrigger className="w-[190px] border-0 bg-card surface">
+            <SelectValue placeholder="Formato" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos los formatos</SelectItem>
+            {FORMAT_DEFS.map((f) => (
+              <SelectItem key={f.id} value={f.id}>
+                {f.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -92,11 +97,15 @@ export function TemplatesPage() {
       ) : data && data.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {data.map((t) => (
-            <Card key={t.id} className="flex flex-col overflow-hidden">
-              <div className="relative flex h-28 items-center justify-center bg-gradient-to-br from-primary/10 to-accent">
+            <Card key={t.id} className="flex flex-col overflow-hidden rounded-2xl surface transition-all hover:-translate-y-0.5">
+              <div
+                className="relative flex h-28 items-center justify-center"
+                style={{ background: `linear-gradient(135deg, ${MODULES.plantillas.color}22, ${MODULES.plantillas.to}14)` }}
+              >
                 <Icon
                   name={FORMAT_DEFS.find((f) => f.id === t.format)?.icon ?? 'FileText'}
-                  className="h-9 w-9 text-primary/70"
+                  className="h-9 w-9"
+                  style={{ color: MODULES.plantillas.color }}
                 />
                 {t.is_official && (
                   <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">

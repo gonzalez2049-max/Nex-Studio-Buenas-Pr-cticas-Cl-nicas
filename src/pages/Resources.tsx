@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { PageHeader } from '@/components/common/PageHeader'
+import { ModuleHero } from '@/components/common/ModuleHero'
 import { ConfigNotice } from '@/components/common/ConfigNotice'
 import { EmptyState } from '@/components/common/EmptyState'
 import { Icon } from '@/components/common/Icon'
@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useResources } from '@/hooks/queries'
+import { MODULES } from '@/lib/modules'
 import { cn } from '@/lib/utils'
 import type { Resource } from '@/types/database'
 
@@ -46,7 +47,13 @@ export function ResourcesPage({
 
   return (
     <>
-      <PageHeader title={title} description={description} />
+      <ModuleHero
+        module={championKit ? MODULES.kit : MODULES.recursos}
+        eyebrow={championKit ? 'Adopción' : 'Biblioteca institucional'}
+        title={title}
+        subtitle={description}
+        compact
+      />
       <ConfigNotice />
 
       {championKit && (
