@@ -9,39 +9,26 @@
 
 /* ------------------------------------------------------------------ Roles */
 
-export const ROLES = [
-  'admin_ubpc',
-  'coordinador',
-  'profesional_ubpc',
-  'champion',
-  'revisor',
-  'visualizador',
-] as const
+/**
+ * NEX Studio opera con dos perfiles reales de la UBPC. La revisión está
+ * integrada en el Coordinador. Los perfiles Champion, Revisor y Visualizador
+ * se retiraron del uso (el enum de base de datos conserva sus valores por
+ * compatibilidad, pero la aplicación solo usa estos dos).
+ */
+export const ROLES = ['coordinador', 'profesional_ubpc'] as const
 
 export type Role = (typeof ROLES)[number]
 
 export const ROLE_LABELS: Record<Role, string> = {
-  admin_ubpc: 'Administrador UBPC',
-  coordinador: 'Coordinador',
+  coordinador: 'Coordinador UBPC',
   profesional_ubpc: 'Profesional UBPC',
-  champion: 'Champion',
-  revisor: 'Revisor',
-  visualizador: 'Visualizador',
 }
 
 export const ROLE_DESCRIPTIONS: Record<Role, string> = {
-  admin_ubpc:
-    'Control total de la plataforma: usuarios, roles, plantillas oficiales, producción UBPC y configuración institucional.',
   coordinador:
-    'Coordina la producción de su unidad, asigna revisores, aprueba y publica materiales.',
+    'Acceso total: administración, creación, revisión, aprobación, publicación, archivo, códigos, transferencias, trazabilidad e indicadores.',
   profesional_ubpc:
-    'Crea y edita materiales de transferencia del conocimiento y los envía a revisión.',
-  champion:
-    'Impulsa la adopción; accede al Kit Champion y difunde materiales publicados.',
-  revisor:
-    'Revisa materiales pendientes, deja observaciones y aprueba o devuelve para corrección.',
-  visualizador:
-    'Consulta y descarga materiales publicados. Sin permisos de edición.',
+    'Crea, edita, duplica y organiza proyectos; usa plantillas y Kit Champion; registra transferencias; envía a revisión y corrige observaciones; descarga y comparte materiales aprobados.',
 }
 
 /* ---------------------------------------------------------------- Estados */
@@ -262,16 +249,19 @@ export const FORMAT_LABELS: Record<MaterialFormat, string> = Object.fromEntries(
  * políticas RLS de Supabase; esto solo decide qué mostrar/habilitar.
  */
 export const PERMISSIONS = {
+  // Ambos perfiles crean materiales.
   canCreateMaterial: (r: Role) =>
-    ['admin_ubpc', 'coordinador', 'profesional_ubpc'].includes(r),
-  canReview: (r: Role) => ['admin_ubpc', 'coordinador', 'revisor'].includes(r),
-  canApprove: (r: Role) => ['admin_ubpc', 'coordinador'].includes(r),
-  canPublish: (r: Role) => ['admin_ubpc', 'coordinador'].includes(r),
-  canManageUsers: (r: Role) => r === 'admin_ubpc',
-  canManageTemplates: (r: Role) => ['admin_ubpc', 'coordinador'].includes(r),
+    r === 'coordinador' || r === 'profesional_ubpc',
+  // Revisión, aprobación, publicación y administración: solo Coordinador.
+  canReview: (r: Role) => r === 'coordinador',
+  canApprove: (r: Role) => r === 'coordinador',
+  canPublish: (r: Role) => r === 'coordinador',
+  canManageUsers: (r: Role) => r === 'coordinador',
+  canManageTemplates: (r: Role) => r === 'coordinador',
+  canViewProduction: (r: Role) => r === 'coordinador',
+  // El Kit Champion lo usan ambos perfiles.
   canAccessChampionKit: (r: Role) =>
-    ['admin_ubpc', 'coordinador', 'champion'].includes(r),
-  canViewProduction: (r: Role) => ['admin_ubpc', 'coordinador'].includes(r),
+    r === 'coordinador' || r === 'profesional_ubpc',
 } as const
 
 export function transitionLabel(

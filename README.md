@@ -65,11 +65,21 @@ reloj de posición y documento.
 | `/notificaciones` | Notificaciones del flujo |
 | `/configuracion` | Perfil, apariencia, roles y gestión de usuarios |
 
-## Roles
+## Perfiles
 
-`Administrador UBPC` · `Coordinador` · `Profesional UBPC` · `Champion` ·
-`Revisor` · `Visualizador`. Los permisos de la interfaz están en
-`src/lib/domain.ts` y se refuerzan con RLS en la base de datos.
+NEX Studio opera con **dos perfiles reales** de la UBPC:
+
+- **Coordinador UBPC** — acceso total: administración, creación, revisión,
+  aprobación, publicación, archivo, códigos, transferencias, trazabilidad e
+  indicadores. La revisión está integrada en este perfil.
+- **Profesional UBPC** — crea, edita, duplica y organiza proyectos; usa
+  plantillas y Kit Champion; registra transferencias; envía a revisión y
+  corrige observaciones; descarga y comparte materiales aprobados. Sin acceso a
+  usuarios, configuración institucional ni aprobación final.
+
+Los permisos están en `src/lib/domain.ts`. El enum de base de datos conserva
+valores heredados (Champion/Revisor/Visualizador) por compatibilidad, pero la
+aplicación solo usa estos dos perfiles.
 
 ## Flujo editorial
 

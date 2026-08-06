@@ -21,7 +21,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'Plus',
     color: '#2563eb',
     group: 'principal',
-    roles: ['admin_ubpc', 'coordinador', 'profesional_ubpc'],
+    roles: ['coordinador', 'profesional_ubpc'],
   },
   {
     to: '/proyectos',
@@ -36,7 +36,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'ClipboardCheck',
     color: '#fb7185',
     group: 'principal',
-    roles: ['admin_ubpc', 'coordinador', 'revisor'],
+    roles: ['coordinador'],
   },
   { to: '/plantillas', label: 'Plantillas', icon: 'LayoutTemplate', color: '#7c3aed', group: 'principal' },
   {
@@ -45,7 +45,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'Sparkles',
     color: '#14b8a6',
     group: 'principal',
-    roles: ['admin_ubpc', 'coordinador', 'champion'],
+    roles: ['coordinador', 'profesional_ubpc'],
   },
   { to: '/recursos', label: 'Recursos', icon: 'BookOpen', color: '#0ea5e9', group: 'principal' },
 
@@ -62,7 +62,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'Factory',
     color: '#10b981',
     group: 'produccion',
-    roles: ['admin_ubpc', 'coordinador'],
+    roles: ['coordinador'],
   },
 
   {
@@ -71,7 +71,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'ShieldHalf',
     color: '#475569',
     group: 'sistema',
-    roles: ['admin_ubpc', 'coordinador'],
+    roles: ['coordinador'],
   },
   {
     to: '/notificaciones',

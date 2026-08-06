@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth, useRole } from '@/contexts/AuthContext'
 import { PERMISSIONS } from '@/lib/domain'
 import type { Role } from '@/lib/domain'
 
@@ -38,9 +38,9 @@ export function RoleGate({
   allow: (role: Role) => boolean
   children: React.ReactNode
 }) {
-  const { profile, configured } = useAuth()
-  if (!configured) return <>{children}</>
-  const role = profile?.role ?? 'visualizador'
+  // Usa el rol efectivo (respeta la «vista temporal»), también en modo demo,
+  // para que previsualizar como Profesional restrinja realmente el acceso.
+  const role = useRole()
   if (!allow(role)) return <Navigate to="/" replace />
   return <>{children}</>
 }

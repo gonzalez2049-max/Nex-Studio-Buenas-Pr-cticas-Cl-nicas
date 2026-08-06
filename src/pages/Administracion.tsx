@@ -82,7 +82,7 @@ function useTemplatesCount() {
 function ImpersonationBar() {
   const { impersonatedRole, setImpersonatedRole } = useAuth()
   const effective = useRole()
-  const roles: Role[] = ['champion', 'revisor', 'profesional_ubpc']
+  const roles: Role[] = ['coordinador', 'profesional_ubpc']
 
   return (
     <div className="rounded-2xl border bg-card p-4 surface">

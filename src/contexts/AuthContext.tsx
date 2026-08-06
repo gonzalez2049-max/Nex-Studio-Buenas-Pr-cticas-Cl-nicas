@@ -166,6 +166,6 @@ export function useAuth(): AuthState {
 export function useRole(): Role {
   const { profile, configured, impersonatedRole } = useAuth()
   if (impersonatedRole) return impersonatedRole
-  if (!configured) return 'admin_ubpc'
-  return profile?.role ?? 'visualizador'
+  if (!configured) return 'coordinador'
+  return profile?.role ?? 'profesional_ubpc'
 }

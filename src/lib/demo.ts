@@ -28,12 +28,12 @@ const iso = (daysAgo: number) =>
 /* --------------------------------------------------------------- Perfiles */
 
 export const DEMO_PROFILES: Profile[] = [
-  { id: 'p-admin', email: 'admin@ubpc.org', full_name: 'Dra. Elena Ríos', avatar_url: null, role: 'admin_ubpc', unit: 'UBPC · Dirección', job_title: 'Directora UBPC', created_at: iso(120), updated_at: iso(2) },
-  { id: 'p-coord', email: 'coord@ubpc.org', full_name: 'Dr. Marco Salas', avatar_url: null, role: 'coordinador', unit: 'UBPC · Medicina Interna', job_title: 'Coordinador', created_at: iso(110), updated_at: iso(3) },
+  { id: 'p-admin', email: 'coordinacion@ubpc.org', full_name: 'Dra. Elena Ríos', avatar_url: null, role: 'coordinador', unit: 'UBPC · Dirección', job_title: 'Coordinadora UBPC', created_at: iso(120), updated_at: iso(2) },
+  { id: 'p-coord', email: 'coord@ubpc.org', full_name: 'Dr. Marco Salas', avatar_url: null, role: 'coordinador', unit: 'UBPC · Medicina Interna', job_title: 'Coordinador UBPC', created_at: iso(110), updated_at: iso(3) },
   { id: 'p-prof', email: 'prof@ubpc.org', full_name: 'Lic. Ana Pérez', avatar_url: null, role: 'profesional_ubpc', unit: 'UBPC · Enfermería', job_title: 'Profesional de enfermería', created_at: iso(90), updated_at: iso(1) },
-  { id: 'p-champ', email: 'champion@ubpc.org', full_name: 'Enf. Julia Mora', avatar_url: null, role: 'champion', unit: 'UBPC · UCI', job_title: 'Champion de seguridad', created_at: iso(80), updated_at: iso(5) },
-  { id: 'p-rev', email: 'revisor@ubpc.org', full_name: 'Dr. Iván Castro', avatar_url: null, role: 'revisor', unit: 'UBPC · Calidad', job_title: 'Revisor clínico', created_at: iso(70), updated_at: iso(4) },
-  { id: 'p-view', email: 'consulta@ubpc.org', full_name: 'Sr. Pablo Núñez', avatar_url: null, role: 'visualizador', unit: 'UBPC · Docencia', job_title: 'Consulta', created_at: iso(60), updated_at: iso(6) },
+  { id: 'p-champ', email: 'julia.mora@ubpc.org', full_name: 'Enf. Julia Mora', avatar_url: null, role: 'profesional_ubpc', unit: 'UBPC · UCI', job_title: 'Profesional UBPC', created_at: iso(80), updated_at: iso(5) },
+  { id: 'p-rev', email: 'ivan.castro@ubpc.org', full_name: 'Dr. Iván Castro', avatar_url: null, role: 'coordinador', unit: 'UBPC · Calidad', job_title: 'Coordinador UBPC', created_at: iso(70), updated_at: iso(4) },
+  { id: 'p-view', email: 'pablo.nunez@ubpc.org', full_name: 'Sr. Pablo Núñez', avatar_url: null, role: 'profesional_ubpc', unit: 'UBPC · Docencia', job_title: 'Profesional UBPC', created_at: iso(60), updated_at: iso(6) },
 ]
 
 const byId = (id: string) => DEMO_PROFILES.find((p) => p.id === id) ?? null
@@ -65,7 +65,7 @@ const SPECS: Spec[] = [
   { id: 'd3', code: 'UBPC-EVI-2026-0003', title: 'Boletín EVI: manejo del dolor agudo', description: 'Síntesis de evidencia sobre valoración y manejo del dolor.', format: 'boletin', status: 'con_observaciones', owner: 'p-champ', reviewer: 'p-rev', tags: ['dolor'], updated: 2, withContent: true },
   { id: 'd4', code: 'UBPC-AFI-2026-0004', title: 'Afiche: prevención de caídas', description: 'Pieza mural para señalización del riesgo de caídas.', format: 'poster', status: 'aprobado', owner: 'p-prof', reviewer: 'p-rev', tags: ['caídas'], updated: 3 },
   { id: 'd5', code: 'UBPC-KIT-2026-0005', title: 'Kit Champion de higiene de manos', description: 'Paquete completo para impulsar la higiene de manos.', format: 'kit_champion', status: 'publicado', owner: 'p-champ', tags: ['higiene'], updated: 4, expires: -60 },
-  { id: 'd6', code: 'UBPC-FLU-2026-0006', title: 'Flujograma de notificación de eventos adversos', description: 'Ruta de notificación y análisis de eventos.', format: 'flujograma', status: 'en_edicion', owner: 'p-coord', tags: ['calidad'], updated: 0, withContent: true },
+  { id: 'd6', code: 'UBPC-FLU-2026-0006', title: 'Flujograma de notificación de eventos adversos', description: 'Ruta de notificación y análisis de eventos.', format: 'flujograma', status: 'en_edicion', owner: 'p-prof', tags: ['calidad'], updated: 0, withContent: true },
   { id: 'd7', code: 'UBPC-PRES-2026-0007', title: 'Sesión: buenas prácticas clínicas 2026', description: 'Diapositivas para la capacitación anual.', format: 'presentacion', status: 'borrador', owner: 'p-prof', tags: ['formación'], updated: 1, withContent: true },
   { id: 'd8', code: 'UBPC-TRIP-2026-0008', title: 'Tríptico informativo para pacientes', description: 'Folleto con recomendaciones al alta.', format: 'triptico', status: 'pendiente_revision', owner: 'p-champ', reviewer: 'p-rev', tags: ['pacientes'], updated: 2 },
   { id: 'd9', code: 'UBPC-FICHA-2026-0009', title: 'Ficha rápida: escala EVA del dolor', description: 'Tarjeta de bolsillo para valoración del dolor.', format: 'ficha_tecnica', status: 'archivado', owner: 'p-prof', tags: ['dolor'], updated: 30 },

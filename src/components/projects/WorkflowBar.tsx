@@ -60,11 +60,9 @@ export function WorkflowBar({ project }: { project: Project }) {
   const [rejectDialog, setRejectDialog] = React.useState(false)
   const [note, setNote] = React.useState('')
 
+  // La revisión está integrada en el Coordinador.
   const reviewers = React.useMemo(
-    () =>
-      (profiles ?? []).filter((p) =>
-        ['revisor', 'coordinador', 'admin_ubpc'].includes(p.role),
-      ),
+    () => (profiles ?? []).filter((p) => p.role === 'coordinador'),
     [profiles],
   )
 
@@ -145,14 +143,14 @@ export function WorkflowBar({ project }: { project: Project }) {
           <DialogHeader>
             <DialogTitle>Enviar a revisión</DialogTitle>
             <DialogDescription>
-              Asigna un revisor. Recibirá una notificación con el material.
+              Asigna un coordinador. Recibirá una notificación con el material.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <Label>Revisor</Label>
+            <Label>Coordinador</Label>
             <Select value={reviewerId} onValueChange={setReviewerId}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecciona un revisor…" />
+                <SelectValue placeholder="Selecciona un coordinador…" />
               </SelectTrigger>
               <SelectContent>
                 {reviewers.map((r) => (
@@ -162,7 +160,7 @@ export function WorkflowBar({ project }: { project: Project }) {
                 ))}
                 {reviewers.length === 0 && (
                   <div className="px-2 py-3 text-sm text-muted-foreground">
-                    No hay revisores registrados.
+                    No hay coordinadores registrados.
                   </div>
                 )}
               </SelectContent>
