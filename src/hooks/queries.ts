@@ -4,17 +4,27 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import * as api from '@/lib/api'
+import * as demo from '@/lib/demo'
 import { isSupabaseConfigured } from '@/lib/supabase'
 
-/** Solo lanzamos consultas si Supabase está configurado. */
-const enabled = isSupabaseConfigured
+/**
+ * Si Supabase está configurado usamos la API real; si no, servimos datos demo
+ * para que todas las pantallas sean evaluables. La lógica real no cambia.
+ */
+const cfg = isSupabaseConfigured
+const enabled = true
+
+/** Elige entre la consulta real y el respaldo demo. */
+function pick<T>(real: () => Promise<T>, fake: () => T): () => Promise<T> {
+  return cfg ? real : () => Promise.resolve(fake())
+}
 
 /* --------------------------------------------------------- Proyectos */
 
 export function useProjects(filters: api.ProjectFilters = {}) {
   return useQuery({
     queryKey: ['projects', filters],
-    queryFn: () => api.listProjects(filters),
+    queryFn: pick(() => api.listProjects(filters), () => demo.listProjects(filters)),
     enabled,
   })
 }
@@ -22,8 +32,8 @@ export function useProjects(filters: api.ProjectFilters = {}) {
 export function useProject(id: string | undefined) {
   return useQuery({
     queryKey: ['project', id],
-    queryFn: () => api.getProject(id!),
-    enabled: enabled && Boolean(id),
+    queryFn: pick(() => api.getProject(id!), () => demo.getProject(id!)),
+    enabled: Boolean(id),
   })
 }
 
@@ -87,7 +97,7 @@ export function useDuplicateProject() {
 export function useTemplates(format?: Parameters<typeof api.listTemplates>[0]) {
   return useQuery({
     queryKey: ['templates', format ?? 'all'],
-    queryFn: () => api.listTemplates(format),
+    queryFn: pick(() => api.listTemplates(format), () => []),
     enabled,
   })
 }
@@ -97,7 +107,7 @@ export function useTemplates(format?: Parameters<typeof api.listTemplates>[0]) {
 export function useDashboardMetrics() {
   return useQuery({
     queryKey: ['metrics'],
-    queryFn: api.getDashboardMetrics,
+    queryFn: pick(api.getDashboardMetrics, demo.getDashboardMetrics),
     enabled,
   })
 }
@@ -105,7 +115,7 @@ export function useDashboardMetrics() {
 export function useActivity(limit = 15) {
   return useQuery({
     queryKey: ['activity', limit],
-    queryFn: () => api.listActivity(limit),
+    queryFn: pick(() => api.listActivity(limit), () => demo.listActivity(limit)),
     enabled,
   })
 }
@@ -115,8 +125,8 @@ export function useActivity(limit = 15) {
 export function useObservations(projectId: string | undefined) {
   return useQuery({
     queryKey: ['observations', projectId],
-    queryFn: () => api.listObservations(projectId!),
-    enabled: enabled && Boolean(projectId),
+    queryFn: pick(() => api.listObservations(projectId!), () => demo.listObservations(projectId!)),
+    enabled: Boolean(projectId),
   })
 }
 
@@ -144,8 +154,8 @@ export function useResolveObservation(projectId: string) {
 export function useVersions(projectId: string | undefined) {
   return useQuery({
     queryKey: ['versions', projectId],
-    queryFn: () => api.listVersions(projectId!),
-    enabled: enabled && Boolean(projectId),
+    queryFn: pick(() => api.listVersions(projectId!), () => demo.listVersions(projectId!)),
+    enabled: Boolean(projectId),
   })
 }
 
@@ -196,7 +206,7 @@ export function useGenerateSampleData() {
 export function useTransferRecords() {
   return useQuery({
     queryKey: ['transfer'],
-    queryFn: api.listTransferRecords,
+    queryFn: pick(api.listTransferRecords, demo.listTransferRecords),
     enabled,
   })
 }
@@ -214,7 +224,10 @@ export function useCreateTransferRecord() {
 export function useResources(championKit = false, category?: string) {
   return useQuery({
     queryKey: ['resources', championKit, category ?? 'all'],
-    queryFn: () => api.listResources(championKit, category),
+    queryFn: pick(
+      () => api.listResources(championKit, category),
+      () => demo.listResources(championKit, category),
+    ),
     enabled,
   })
 }
@@ -224,9 +237,9 @@ export function useResources(championKit = false, category?: string) {
 export function useNotifications() {
   return useQuery({
     queryKey: ['notifications'],
-    queryFn: api.listNotifications,
+    queryFn: pick(api.listNotifications, demo.listNotifications),
     enabled,
-    refetchInterval: 60_000,
+    refetchInterval: cfg ? 60_000 : false,
   })
 }
 
@@ -252,7 +265,7 @@ export function useMarkAllNotificationsRead() {
 export function useProfiles() {
   return useQuery({
     queryKey: ['profiles'],
-    queryFn: api.listProfiles,
+    queryFn: pick(api.listProfiles, demo.listProfiles),
     enabled,
   })
 }

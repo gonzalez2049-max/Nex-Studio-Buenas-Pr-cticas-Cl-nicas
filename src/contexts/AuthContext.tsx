@@ -19,6 +19,9 @@ interface AuthState {
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
   updateProfile: (patch: Partial<Profile>) => Promise<{ error: string | null }>
+  /** Rol de «vista temporal» (impersonación) para previsualizar la interfaz. */
+  impersonatedRole: Role | null
+  setImpersonatedRole: (role: Role | null) => void
 }
 
 const AuthContext = React.createContext<AuthState | undefined>(undefined)
@@ -40,6 +43,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = React.useState<Session | null>(null)
   const [profile, setProfile] = React.useState<Profile | null>(null)
   const [loading, setLoading] = React.useState(true)
+  const [impersonatedRole, setImpersonatedRole] = React.useState<Role | null>(
+    null,
+  )
 
   const loadProfile = React.useCallback(async (userId: string | undefined) => {
     if (!userId) {
@@ -138,8 +144,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut,
       refreshProfile,
       updateProfile,
+      impersonatedRole,
+      setImpersonatedRole,
     }),
-    [session, profile, loading, signIn, signUp, signOut, refreshProfile, updateProfile],
+    [session, profile, loading, signIn, signUp, signOut, refreshProfile, updateProfile, impersonatedRole],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
@@ -151,8 +159,13 @@ export function useAuth(): AuthState {
   return ctx
 }
 
-/** Rol actual del usuario, con fallback a visualizador. */
+/**
+ * Rol efectivo para la interfaz. Prioriza la «vista temporal» (impersonación);
+ * en modo demo (sin Supabase) usa administrador para exponer todas las áreas.
+ */
 export function useRole(): Role {
-  const { profile } = useAuth()
+  const { profile, configured, impersonatedRole } = useAuth()
+  if (impersonatedRole) return impersonatedRole
+  if (!configured) return 'admin_ubpc'
   return profile?.role ?? 'visualizador'
 }

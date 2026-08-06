@@ -28,10 +28,13 @@ import { DashboardPage } from '@/pages/Dashboard'
 import { CreateMaterialPage } from '@/pages/CreateMaterial'
 import { MyProjectsPage } from '@/pages/MyProjects'
 import { ProjectDetailPage } from '@/pages/ProjectDetail'
+import { ReviewPage } from '@/pages/Review'
 import { TemplatesPage } from '@/pages/Templates'
 import { ResourcesPage } from '@/pages/Resources'
+import { ChampionKitPage } from '@/pages/ChampionKit'
 import { TransferLogPage } from '@/pages/TransferLog'
 import { ProductionPage } from '@/pages/Production'
+import { AdminPage } from '@/pages/Administracion'
 import { NotificationsPage } from '@/pages/Notifications'
 import { SettingsPage } from '@/pages/Settings'
 import { NotFoundPage } from '@/pages/NotFound'
@@ -65,12 +68,20 @@ export const router = createBrowserRouter([
       },
       { path: 'proyectos', element: <MyProjectsPage /> },
       { path: 'proyectos/:id', element: <ProjectDetailPage /> },
+      {
+        path: 'revision',
+        element: (
+          <RoleGate allow={PERMISSIONS.canReview}>
+            <ReviewPage />
+          </RoleGate>
+        ),
+      },
       { path: 'plantillas', element: <TemplatesPage /> },
       {
         path: 'kit-champion',
         element: (
           <RoleGate allow={PERMISSIONS.canAccessChampionKit}>
-            <ResourcesPage championKit />
+            <ChampionKitPage />
           </RoleGate>
         ),
       },
@@ -81,6 +92,14 @@ export const router = createBrowserRouter([
         element: (
           <RoleGate allow={PERMISSIONS.canViewProduction}>
             <ProductionPage />
+          </RoleGate>
+        ),
+      },
+      {
+        path: 'administracion',
+        element: (
+          <RoleGate allow={PERMISSIONS.canViewProduction}>
+            <AdminPage />
           </RoleGate>
         ),
       },

@@ -30,6 +30,14 @@ export const NAV_ITEMS: NavItem[] = [
     color: '#4f46e5',
     group: 'principal',
   },
+  {
+    to: '/revision',
+    label: 'Revisión',
+    icon: 'ClipboardCheck',
+    color: '#fb7185',
+    group: 'principal',
+    roles: ['admin_ubpc', 'coordinador', 'revisor'],
+  },
   { to: '/plantillas', label: 'Plantillas', icon: 'LayoutTemplate', color: '#7c3aed', group: 'principal' },
   {
     to: '/kit-champion',
@@ -57,6 +65,14 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ['admin_ubpc', 'coordinador'],
   },
 
+  {
+    to: '/administracion',
+    label: 'Administración',
+    icon: 'ShieldHalf',
+    color: '#475569',
+    group: 'sistema',
+    roles: ['admin_ubpc', 'coordinador'],
+  },
   {
     to: '/notificaciones',
     label: 'Notificaciones',

@@ -32,17 +32,26 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { FORMAT_LABELS } from '@/lib/domain'
 import { MODULES } from '@/lib/modules'
+import { cn } from '@/lib/utils'
 import { shortDate } from '@/lib/format'
 
-const CHANNELS = [
-  'Sesión presencial',
-  'Correo institucional',
-  'Intranet',
-  'WhatsApp / mensajería',
-  'Cartelera física',
-  'Redes sociales',
-  'Otro',
-]
+const C = MODULES.transferencia.color
+
+const MODALIDADES = ['Sesión presencial', 'Correo institucional', 'Intranet', 'WhatsApp / mensajería', 'Cartelera física', 'Redes sociales', 'Otra']
+const GUIAS = ['LPP', 'Accesos vasculares', 'Dolor', 'Caídas', 'Higiene de manos', 'Otra']
+
+const empty = {
+  projectId: '',
+  guia: '',
+  unidad: '',
+  actividad: '',
+  participantes: '',
+  responsable: '',
+  modalidad: '',
+  resultado: '',
+  evidencia: '',
+  validado: false,
+}
 
 export function TransferLogPage() {
   const { toast } = useToast()
@@ -51,38 +60,42 @@ export function TransferLogPage() {
   const create = useCreateTransferRecord()
 
   const [open, setOpen] = React.useState(false)
-  const [projectId, setProjectId] = React.useState('')
-  const [channel, setChannel] = React.useState('')
-  const [audience, setAudience] = React.useState('')
-  const [reach, setReach] = React.useState('')
-  const [notes, setNotes] = React.useState('')
+  const [form, setForm] = React.useState({ ...empty })
+  const set = (k: keyof typeof form, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }))
 
-  const totalReach =
-    records?.reduce((acc, r) => acc + (r.reach ?? 0), 0) ?? 0
+  /* Indicadores automáticos */
+  const total = records?.length ?? 0
+  const totalReach = records?.reduce((a, r) => a + (r.reach ?? 0), 0) ?? 0
+  const avg = total ? Math.round(totalReach / total) : 0
+  const validadas = (records ?? []).filter((r) => (r.notes ?? '').includes('Validación:') && !(r.notes ?? '').includes('Validación: —')).length
+  const byModalidad = React.useMemo(() => {
+    const m = new Map<string, number>()
+    for (const r of records ?? []) m.set(r.channel, (m.get(r.channel) ?? 0) + 1)
+    return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4)
+  }, [records])
 
   const submit = async () => {
-    if (!projectId || !channel) return
+    if (!form.projectId || !form.modalidad) return
+    const notes = [
+      form.actividad && `Actividad: ${form.actividad}`,
+      form.responsable && `Responsable: ${form.responsable}`,
+      form.resultado && `Resultado: ${form.resultado}`,
+      form.evidencia && `Evidencia: ${form.evidencia}`,
+      `Validación: ${form.validado ? 'Validado por coordinación' : '—'}`,
+    ].filter(Boolean).join(' · ')
     try {
       await create.mutateAsync({
-        project_id: projectId,
-        channel,
-        audience: audience.trim() || undefined,
-        reach: reach ? Number(reach) : 0,
-        notes: notes.trim() || undefined,
+        project_id: form.projectId,
+        channel: form.modalidad,
+        audience: [form.unidad, form.guia].filter(Boolean).join(' · ') || undefined,
+        reach: form.participantes ? Number(form.participantes) : 0,
+        notes,
       })
       toast({ variant: 'success', title: 'Transferencia registrada' })
       setOpen(false)
-      setProjectId('')
-      setChannel('')
-      setAudience('')
-      setReach('')
-      setNotes('')
+      setForm({ ...empty })
     } catch (e) {
-      toast({
-        variant: 'destructive',
-        title: 'No se pudo registrar',
-        description: e instanceof Error ? e.message : 'Error desconocido',
-      })
+      toast({ variant: 'destructive', title: 'No se pudo registrar', description: e instanceof Error ? e.message : 'Conecta Supabase para guardar.' })
     }
   }
 
@@ -90,101 +103,92 @@ export function TransferLogPage() {
     <>
       <ModuleHero
         module={MODULES.transferencia}
-        eyebrow="Trazabilidad"
+        eyebrow="Trazabilidad de la difusión"
         title="Registro de transferencia"
-        subtitle="Evidencia de la difusión y el alcance de los materiales publicados."
+        subtitle="Evidencia clara del alcance y la validación de cada material difundido."
         compact
         actions={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <button
-                className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold shadow-lg transition-transform hover:-translate-y-0.5"
-                style={{ color: MODULES.transferencia.color }}
-              >
+              <button className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold shadow-lg transition-transform hover:-translate-y-0.5" style={{ color: C }}>
                 <Icon name="Plus" className="h-4 w-4" />
                 Registrar transferencia
               </button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-lg">
               <DialogHeader>
                 <DialogTitle>Registrar transferencia</DialogTitle>
-                <DialogDescription>
-                  Documenta dónde y a quién se difundió un material publicado.
-                </DialogDescription>
+                <DialogDescription>Breve y claro: qué material, a quién y con qué resultado.</DialogDescription>
               </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Material publicado *</Label>
-                  <Select value={projectId} onValueChange={setProjectId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona un material…" />
-                    </SelectTrigger>
+
+              <div className="max-h-[65vh] space-y-4 overflow-y-auto pr-1 scrollbar-thin">
+                <Field label="Material publicado *">
+                  <Select value={form.projectId} onValueChange={(v) => set('projectId', v)}>
+                    <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
                     <SelectContent>
                       {(published ?? []).map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.title}
-                        </SelectItem>
+                        <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
                       ))}
                       {(published?.length ?? 0) === 0 && (
-                        <div className="px-2 py-3 text-sm text-muted-foreground">
-                          No hay materiales publicados aún.
-                        </div>
+                        <div className="px-2 py-3 text-sm text-muted-foreground">No hay materiales publicados.</div>
                       )}
                     </SelectContent>
                   </Select>
+                </Field>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Guía / línea">
+                    <Select value={form.guia} onValueChange={(v) => set('guia', v)}>
+                      <SelectTrigger><SelectValue placeholder="Guía…" /></SelectTrigger>
+                      <SelectContent>
+                        {GUIAS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field label="Unidad / servicio">
+                    <Input value={form.unidad} onChange={(e) => set('unidad', e.target.value)} placeholder="Ej. UCI" />
+                  </Field>
                 </div>
-                <div className="space-y-2">
-                  <Label>Canal *</Label>
-                  <Select value={channel} onValueChange={setChannel}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Canal de difusión…" />
-                    </SelectTrigger>
+
+                <Field label="Actividad">
+                  <Input value={form.actividad} onChange={(e) => set('actividad', e.target.value)} placeholder="Ej. Taller de reposicionamiento" />
+                </Field>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Participantes">
+                    <Input type="number" min={0} value={form.participantes} onChange={(e) => set('participantes', e.target.value)} placeholder="0" />
+                  </Field>
+                  <Field label="Responsable">
+                    <Input value={form.responsable} onChange={(e) => set('responsable', e.target.value)} placeholder="Nombre" />
+                  </Field>
+                </div>
+
+                <Field label="Modalidad *">
+                  <Select value={form.modalidad} onValueChange={(v) => set('modalidad', v)}>
+                    <SelectTrigger><SelectValue placeholder="Modalidad de difusión…" /></SelectTrigger>
                     <SelectContent>
-                      {CHANNELS.map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {c}
-                        </SelectItem>
-                      ))}
+                      {MODALIDADES.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Audiencia</Label>
-                    <Input
-                      value={audience}
-                      onChange={(e) => setAudience(e.target.value)}
-                      placeholder="Ej. Enfermería"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Alcance (personas)</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      value={reach}
-                      onChange={(e) => setReach(e.target.value)}
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Notas</Label>
-                  <Textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Observaciones de la transferencia…"
-                  />
-                </div>
+                </Field>
+
+                <Field label="Resultado">
+                  <Textarea value={form.resultado} onChange={(e) => set('resultado', e.target.value)} placeholder="Ej. 100% de asistencia; se resolvieron dudas." rows={2} />
+                </Field>
+
+                <Field label="Evidencia">
+                  <Input value={form.evidencia} onChange={(e) => set('evidencia', e.target.value)} placeholder="Ej. lista de firmas, fotografías, enlace" />
+                </Field>
+
+                <label className="flex items-center gap-2 rounded-lg border p-3 text-sm">
+                  <input type="checkbox" checked={form.validado} onChange={(e) => set('validado', e.target.checked)} />
+                  Validación por coordinación
+                </label>
               </div>
+
               <DialogFooter>
-                <Button variant="outline" onClick={() => setOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button
-                  disabled={!projectId || !channel || create.isPending}
-                  onClick={submit}
-                >
+                <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+                <Button disabled={!form.projectId || !form.modalidad || create.isPending} onClick={submit}>
                   Registrar
                 </Button>
               </DialogFooter>
@@ -195,82 +199,101 @@ export function TransferLogPage() {
 
       <ConfigNotice />
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-2xl font-semibold tabular-nums">
-              {records?.length ?? 0}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Transferencias registradas
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-2xl font-semibold tabular-nums">{totalReach}</p>
-            <p className="text-xs text-muted-foreground">Alcance acumulado</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-2xl font-semibold tabular-nums">
-              {published?.length ?? 0}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Materiales publicados
-            </p>
-          </CardContent>
-        </Card>
+      {/* Indicadores automáticos */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Indicator icon="Share2" label="Transferencias" value={total} />
+        <Indicator icon="Users" label="Alcance acumulado" value={totalReach} />
+        <Indicator icon="TrendingUp" label="Alcance medio" value={avg} />
+        <Indicator icon="BadgeCheck" label="Validadas" value={validadas} />
       </div>
+
+      {byModalidad.length > 0 && (
+        <div className="rounded-2xl border bg-card p-5 surface">
+          <p className="mb-3 text-sm font-semibold text-muted-foreground">Por modalidad</p>
+          <div className="space-y-2.5">
+            {byModalidad.map(([m, n]) => (
+              <div key={m} className="flex items-center gap-3">
+                <span className="w-40 shrink-0 truncate text-sm">{m}</span>
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                  <div className="h-full rounded-full" style={{ width: `${(n / total) * 100}%`, background: C }} />
+                </div>
+                <span className="w-6 text-right text-xs font-medium tabular-nums">{n}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Cargando registro…</p>
       ) : records && records.length > 0 ? (
-        <Card>
+        <Card className="rounded-2xl surface">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
                   <th className="px-4 py-3 font-medium">Material</th>
-                  <th className="px-4 py-3 font-medium">Canal</th>
-                  <th className="px-4 py-3 font-medium">Audiencia</th>
-                  <th className="px-4 py-3 font-medium">Alcance</th>
+                  <th className="px-4 py-3 font-medium">Guía · unidad</th>
+                  <th className="px-4 py-3 font-medium">Modalidad</th>
+                  <th className="px-4 py-3 font-medium">Participantes</th>
+                  <th className="px-4 py-3 font-medium">Validación</th>
                   <th className="px-4 py-3 font-medium">Fecha</th>
                 </tr>
               </thead>
               <tbody>
-                {records.map((r) => (
-                  <tr key={r.id} className="border-b last:border-0">
-                    <td className="px-4 py-3">
-                      <p className="font-medium">
-                        {r.project?.title ?? '—'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {r.project ? FORMAT_LABELS[r.project.format] : ''}
-                      </p>
-                    </td>
-                    <td className="px-4 py-3">{r.channel}</td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {r.audience ?? '—'}
-                    </td>
-                    <td className="px-4 py-3 tabular-nums">{r.reach}</td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {shortDate(r.transferred_at)}
-                    </td>
-                  </tr>
-                ))}
+                {records.map((r) => {
+                  const validated = (r.notes ?? '').includes('Validación:') && !(r.notes ?? '').includes('Validación: —')
+                  return (
+                    <tr key={r.id} className="border-b last:border-0">
+                      <td className="px-4 py-3">
+                        <p className="font-medium">{r.project?.title ?? '—'}</p>
+                        <p className="text-xs text-muted-foreground">{r.project ? FORMAT_LABELS[r.project.format] : ''}</p>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{r.audience ?? '—'}</td>
+                      <td className="px-4 py-3">{r.channel}</td>
+                      <td className="px-4 py-3 tabular-nums">{r.reach}</td>
+                      <td className="px-4 py-3">
+                        <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium', validated ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-muted text-muted-foreground')}>
+                          <Icon name={validated ? 'BadgeCheck' : 'Clock'} className="h-3 w-3" />
+                          {validated ? 'Validada' : 'Pendiente'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{shortDate(r.transferred_at)}</td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
         </Card>
       ) : (
-        <EmptyState
-          icon="Share2"
-          title="Sin transferencias registradas"
-          description="Registra la primera difusión de un material publicado."
-        />
+        <EmptyState icon="Share2" title="Sin transferencias registradas" description="Registra la primera difusión de un material publicado." />
       )}
     </>
+  )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      {children}
+    </div>
+  )
+}
+
+function Indicator({ icon, label, value }: { icon: string; label: string; value: number }) {
+  return (
+    <Card className="rounded-2xl surface">
+      <CardContent className="flex items-center gap-4 p-5">
+        <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: `${C}1f`, color: C }}>
+          <Icon name={icon} className="h-5 w-5" />
+        </span>
+        <div>
+          <p className="text-2xl font-semibold tabular-nums">{value}</p>
+          <p className="text-xs text-muted-foreground">{label}</p>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
