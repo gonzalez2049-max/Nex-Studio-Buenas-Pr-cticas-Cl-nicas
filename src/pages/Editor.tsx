@@ -5,7 +5,7 @@ import { EditorShell } from '@/editor/components/EditorShell'
 import { useEditor } from '@/editor/store'
 import { renderPageToDataURL } from '@/editor/export'
 import { useProject } from '@/hooks/queries'
-import { updateProject } from '@/lib/api'
+import { updateProject, createVersion } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
 import { useRole } from '@/contexts/AuthContext'
 import { PERMISSIONS } from '@/lib/domain'
@@ -48,32 +48,42 @@ export function EditorPage() {
     }
   }, [project, load])
 
-  const save = useCallback(async () => {
-    if (!project || !canEdit) return
-    setSaving(true)
-    try {
-      const doc = useEditor.getState().doc
-      await updateProject(project.id, {
-        content: doc as unknown as Record<string, unknown>,
-        status: project.status === 'borrador' ? 'en_edicion' : project.status,
-      })
-      markSaved()
-      setLastSavedAt(new Date().toISOString())
-    } catch (e) {
-      toast({
-        variant: 'destructive',
-        title: 'No se pudo guardar',
-        description: e instanceof Error ? e.message : 'Error desconocido',
-      })
-    } finally {
-      setSaving(false)
-    }
-  }, [project, canEdit, markSaved, toast])
+  const save = useCallback(
+    async (makeVersion = false) => {
+      if (!project || !canEdit) return
+      setSaving(true)
+      try {
+        const doc = useEditor.getState().doc
+        const nextStatus =
+          project.status === 'borrador' ? 'en_edicion' : project.status
+        await updateProject(project.id, {
+          content: doc as unknown as Record<string, unknown>,
+          status: nextStatus,
+        })
+        if (makeVersion)
+          await createVersion(
+            { id: project.id, content: doc as unknown as Record<string, unknown>, status: nextStatus },
+            'Guardado manual',
+          ).catch(() => undefined)
+        markSaved()
+        setLastSavedAt(new Date().toISOString())
+      } catch (e) {
+        toast({
+          variant: 'destructive',
+          title: 'No se pudo guardar',
+          description: e instanceof Error ? e.message : 'Error desconocido',
+        })
+      } finally {
+        setSaving(false)
+      }
+    },
+    [project, canEdit, markSaved, toast],
+  )
 
-  // Autoguardado con debounce.
+  // Autoguardado con debounce (sin crear versión).
   useEffect(() => {
     if (!autosave || !dirty || !canEdit) return
-    const t = setTimeout(() => void save(), 1500)
+    const t = setTimeout(() => void save(false), 1500)
     return () => clearTimeout(t)
   }, [autosave, dirty, canEdit, save])
 
@@ -129,7 +139,7 @@ export function EditorPage() {
         lastSavedAt={lastSavedAt}
         autosave={autosave}
         onToggleAutosave={() => setAutosave((a) => !a)}
-        onSave={save}
+        onSave={() => save(true)}
         onBack={() => navigate(`/proyectos/${project.id}`)}
         onPreview={openPreview}
         onShare={share}
@@ -143,7 +153,7 @@ export function EditorPage() {
         </div>
       )}
 
-      <EditorShell onSave={save} />
+      <EditorShell onSave={() => save(true)} />
 
       <Dialog open={Boolean(preview)} onOpenChange={(o) => !o && setPreview(null)}>
         <DialogContent className="max-w-3xl">

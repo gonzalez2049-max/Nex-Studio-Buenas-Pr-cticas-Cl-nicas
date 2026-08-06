@@ -17,6 +17,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
@@ -26,6 +27,7 @@ import { getFormatDef } from '@/editor/formats'
 import {
   exportAllToPng,
   exportPageToPng,
+  exportPageToSvg,
   exportToPdf,
   exportToPptx,
 } from '@/editor/export'
@@ -147,19 +149,32 @@ export function EditorTopbar(props: Props) {
               Descargar
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuLabel>{def.pageKind} actual</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => run('PNG', () => exportPageToPng(doc, currentPage, props.title))}>
               <Icon name="Image" className="h-4 w-4" />
-              {def.pageKind} actual (PNG)
+              PNG (alta resolución)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => run('PDF', () => exportToPdf(doc, props.title, [currentPage]))}>
+              <Icon name="FileText" className="h-4 w-4" />
+              PDF
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => run('SVG', async () => exportPageToSvg(doc, currentPage, props.title))}>
+              <Icon name="Shapes" className="h-4 w-4" />
+              SVG (vectorial)
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>
+              {doc.format === 'kit_champion' ? 'Kit completo' : 'Documento completo'}
+            </DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => run('PDF', () => exportToPdf(doc, props.title))}>
+              <Icon name="FileText" className="h-4 w-4" />
+              {doc.format === 'triptico' ? 'PDF listo para impresión' : 'PDF (todas las páginas)'}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => run('PNG', () => exportAllToPng(doc, props.title))}>
               <Icon name="Images" className="h-4 w-4" />
-              Todo (PNG por página)
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => run('PDF', () => exportToPdf(doc, props.title))}>
-              <Icon name="FileText" className="h-4 w-4" />
-              Documento PDF
+              PNG por {def.pageKind.toLowerCase()}
             </DropdownMenuItem>
             {def.export.pptx && (
               <DropdownMenuItem onClick={() => run('PPTX', () => exportToPptx(doc, props.title))}>

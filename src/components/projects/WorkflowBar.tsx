@@ -41,7 +41,11 @@ function canDoTransition(
   if (['pendiente_revision', 'en_edicion', 'borrador'].includes(to))
     return PERMISSIONS.canCreateMaterial(role)
   if (to === 'archivado')
-    return PERMISSIONS.canCreateMaterial(role) || PERMISSIONS.canApprove(role)
+    return (
+      PERMISSIONS.canCreateMaterial(role) ||
+      PERMISSIONS.canApprove(role) ||
+      PERMISSIONS.canReview(role)
+    )
   return PERMISSIONS.canApprove(role)
 }
 
@@ -53,6 +57,7 @@ export function WorkflowBar({ project }: { project: Project }) {
   const [reviewDialog, setReviewDialog] = React.useState(false)
   const [reviewerId, setReviewerId] = React.useState<string>('')
   const [observationDialog, setObservationDialog] = React.useState(false)
+  const [rejectDialog, setRejectDialog] = React.useState(false)
   const [note, setNote] = React.useState('')
 
   const reviewers = React.useMemo(
@@ -98,6 +103,11 @@ export function WorkflowBar({ project }: { project: Project }) {
       setObservationDialog(true)
       return
     }
+    // Rechazo desde revisión exige justificación.
+    if (to === 'archivado' && project.status === 'pendiente_revision') {
+      setRejectDialog(true)
+      return
+    }
     void run(to)
   }
 
@@ -114,10 +124,11 @@ export function WorkflowBar({ project }: { project: Project }) {
       <div className="flex flex-wrap gap-2">
         {targets.map((to) => {
           const primary = ['pendiente_revision', 'aprobado', 'publicado'].includes(to)
+          const danger = to === 'archivado' && project.status === 'pendiente_revision'
           return (
             <Button
               key={to}
-              variant={primary ? 'default' : 'outline'}
+              variant={danger ? 'destructive' : primary ? 'default' : 'outline'}
               size="sm"
               disabled={transition.isPending}
               onClick={() => handleClick(to)}
@@ -208,7 +219,44 @@ export function WorkflowBar({ project }: { project: Project }) {
                 setObservationDialog(false)
               }}
             >
-              Devolver
+              Solicitar cambios
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo: rechazar con justificación */}
+      <Dialog open={rejectDialog} onOpenChange={setRejectDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rechazar material</DialogTitle>
+            <DialogDescription>
+              El rechazo archiva el material y notifica a su responsable. La
+              justificación es obligatoria y queda en el historial de revisión.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Justificación *</Label>
+            <Textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Motivo del rechazo…"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectDialog(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={transition.isPending || !note.trim()}
+              onClick={async () => {
+                await run('archivado', { note: note.trim() })
+                setNote('')
+                setRejectDialog(false)
+              }}
+            >
+              Rechazar
             </Button>
           </DialogFooter>
         </DialogContent>

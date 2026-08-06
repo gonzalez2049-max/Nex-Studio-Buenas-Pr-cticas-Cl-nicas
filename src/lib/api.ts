@@ -6,6 +6,8 @@ import type {
   Observation,
   Profile,
   Project,
+  ProjectAccess,
+  ProjectVersion,
   ProjectWithRelations,
   Resource,
   Template,
@@ -157,6 +159,20 @@ export async function deleteProject(id: string): Promise<void> {
   if (error) throw error
 }
 
+/** Duplica un material como nuevo borrador del usuario actual. */
+export async function duplicateProject(id: string): Promise<Project> {
+  const source = await getProject(id)
+  if (!source) throw new Error('Material no encontrado')
+  return createProject({
+    title: `${source.title} (copia)`,
+    description: source.description ?? undefined,
+    format: source.format,
+    template_id: source.template_id,
+    content: source.content,
+    tags: source.tags,
+  })
+}
+
 /**
  * Cambia el estado de un proyecto respetando el flujo editorial, registra la
  * actividad y notifica a las personas implicadas.
@@ -185,6 +201,14 @@ export async function transitionProject(args: {
     meta: note ? { note } : undefined,
   })
 
+  // La justificación de una devolución/rechazo queda como observación en el hilo.
+  if (note && (to === 'con_observaciones' || to === 'archivado')) {
+    await addObservation(
+      project.id,
+      to === 'archivado' ? `Rechazado: ${note}` : note,
+    ).catch(() => undefined)
+  }
+
   // Notificaciones según destino.
   if (to === 'pendiente_revision' && reviewerId) {
     await createNotification({
@@ -196,24 +220,119 @@ export async function transitionProject(args: {
     })
   }
   if (
-    (to === 'con_observaciones' || to === 'aprobado' || to === 'publicado') &&
+    (to === 'con_observaciones' ||
+      to === 'aprobado' ||
+      to === 'publicado' ||
+      to === 'archivado') &&
     project.owner_id
   ) {
     const typeMap: Record<string, NotificationType> = {
       con_observaciones: 'observation_added',
       aprobado: 'approved',
       publicado: 'published',
+      archivado: 'system',
     }
+    const rejected = to === 'archivado' && Boolean(note)
     await createNotification({
       user_id: project.owner_id,
       type: typeMap[to],
-      title: `Material ${STATE_LABELS[to].toLowerCase()}`,
-      body: `«${project.title}» cambió a estado ${STATE_LABELS[to]}.`,
+      title: rejected
+        ? 'Material rechazado'
+        : `Material ${STATE_LABELS[to].toLowerCase()}`,
+      body: rejected
+        ? `«${project.title}» fue rechazado: ${note}`
+        : `«${project.title}» cambió a estado ${STATE_LABELS[to]}.`,
       link: `/proyectos/${project.id}`,
     })
   }
 
   return updated
+}
+
+/* ----------------------------------------------------- Versiones */
+
+export async function listVersions(
+  projectId: string,
+): Promise<ProjectVersion[]> {
+  const { data, error } = await supabase
+    .from('project_versions')
+    .select('*, author:profiles (id, full_name, avatar_url)')
+    .eq('project_id', projectId)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return (data ?? []) as ProjectVersion[]
+}
+
+/** Crea una instantánea del proyecto en el historial de versiones. */
+export async function createVersion(
+  project: Pick<Project, 'id' | 'content' | 'status'>,
+  note?: string,
+): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Sin sesión activa')
+  const { count } = await supabase
+    .from('project_versions')
+    .select('*', { count: 'exact', head: true })
+    .eq('project_id', project.id)
+  const { error } = await supabase.from('project_versions').insert({
+    project_id: project.id,
+    version: (count ?? 0) + 1,
+    content: project.content,
+    status: project.status,
+    note: note ?? null,
+    created_by: user.id,
+  })
+  if (error) throw error
+}
+
+/** Restaura el contenido de una versión en el proyecto. */
+export async function restoreVersion(
+  projectId: string,
+  version: ProjectVersion,
+): Promise<Project> {
+  // Guarda el estado actual antes de sobrescribir, para no perderlo.
+  const current = await getProject(projectId)
+  if (current)
+    await createVersion(current, 'Autoguardado antes de restaurar').catch(
+      () => undefined,
+    )
+  const updated = await updateProject(projectId, {
+    content: version.content,
+  })
+  await logActivity({
+    project_id: projectId,
+    action: 'version_restored',
+    meta: { version: version.version },
+  })
+  return updated
+}
+
+/* -------------------------------------------------------- Acceso / compartir */
+
+export async function updateProjectAccess(
+  id: string,
+  access: ProjectAccess,
+): Promise<void> {
+  const { error } = await supabase
+    .from('projects')
+    .update({ access })
+    .eq('id', id)
+  if (error) throw error
+  await logActivity({ project_id: id, action: 'access_changed', meta: { access } })
+}
+
+/** Registra un evento de compartición para trazabilidad. */
+export async function logShare(
+  projectId: string,
+  channel: string,
+): Promise<void> {
+  await logActivity({
+    project_id: projectId,
+    action: 'shared',
+    meta: { channel },
+  })
 }
 
 /* -------------------------------------------------------- Observaciones */
@@ -298,12 +417,16 @@ export async function createTransferRecord(input: {
 
 /* ----------------------------------------------------------- Recursos */
 
-export async function listResources(championKit = false): Promise<Resource[]> {
+export async function listResources(
+  championKit = false,
+  category?: string,
+): Promise<Resource[]> {
   let query = supabase
     .from('resources')
     .select('*')
     .order('created_at', { ascending: false })
   if (championKit) query = query.eq('is_champion_kit', true)
+  if (category && category !== 'all') query = query.eq('category', category)
   const { data, error } = await query
   if (error) throw error
   return (data ?? []) as Resource[]
@@ -433,5 +556,101 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     published: byStatus.publicado,
     drafts: byStatus.borrador + byStatus.en_edicion,
     expiringSoon,
+  }
+}
+
+/* --------------------------------------------------------- Datos de prueba */
+
+/**
+ * Genera materiales de ejemplo del usuario actual, recorriendo el flujo
+ * editorial completo, con versiones, observaciones y transferencias. Es
+ * persistencia real (no simulada); pensado para poblar una unidad nueva.
+ */
+export async function generateSampleData(): Promise<{ created: number }> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Sin sesión activa')
+
+  const specs: {
+    title: string
+    format: MaterialFormat
+    target: ProjectState
+    tags: string[]
+  }[] = [
+    { title: 'Prevención de LPP en hospitalización', format: 'infografia', target: 'publicado', tags: ['LPP', 'seguridad'] },
+    { title: 'Bundle de accesos vasculares', format: 'checklist', target: 'aprobado', tags: ['accesos vasculares'] },
+    { title: 'Valoración del dolor con EVA', format: 'boletin', target: 'pendiente_revision', tags: ['dolor'] },
+    { title: 'Prevención de caídas del paciente', format: 'poster', target: 'con_observaciones', tags: ['caídas'] },
+    { title: 'Kit Champion de higiene de manos', format: 'kit_champion', target: 'publicado', tags: ['higiene'] },
+    { title: 'Flujograma de notificación de eventos', format: 'flujograma', target: 'en_edicion', tags: ['calidad'] },
+    { title: 'Sesión: buenas prácticas clínicas', format: 'presentacion', target: 'borrador', tags: ['formación'] },
+  ]
+
+  let created = 0
+  for (const spec of specs) {
+    const project = await createProject({
+      title: spec.title,
+      format: spec.format,
+      tags: spec.tags,
+      description: 'Material de ejemplo generado para pruebas de la unidad.',
+    })
+    created += 1
+
+    let current: Project = project
+    const path: ProjectState[] = pathTo(spec.target)
+    for (const step of path) {
+      current = await transitionProject({
+        project: current,
+        to: step,
+        reviewerId: step === 'pendiente_revision' ? user.id : undefined,
+        note:
+          step === 'con_observaciones'
+            ? 'Ajustar terminología y añadir referencias.'
+            : undefined,
+      })
+    }
+
+    await createVersion(current, 'Versión inicial de ejemplo').catch(
+      () => undefined,
+    )
+
+    if (spec.target === 'publicado') {
+      await createTransferRecord({
+        project_id: project.id,
+        channel: 'Sesión presencial',
+        audience: 'Enfermería',
+        reach: 24,
+        notes: 'Difusión en reunión de servicio.',
+      }).catch(() => undefined)
+    }
+  }
+
+  return { created }
+}
+
+/** Secuencia de transiciones desde borrador hasta el estado objetivo. */
+function pathTo(target: ProjectState): ProjectState[] {
+  const full: ProjectState[] = [
+    'en_edicion',
+    'pendiente_revision',
+    'aprobado',
+    'publicado',
+  ]
+  switch (target) {
+    case 'borrador':
+      return []
+    case 'en_edicion':
+      return ['en_edicion']
+    case 'pendiente_revision':
+      return ['en_edicion', 'pendiente_revision']
+    case 'con_observaciones':
+      return ['en_edicion', 'pendiente_revision', 'con_observaciones']
+    case 'aprobado':
+      return ['en_edicion', 'pendiente_revision', 'aprobado']
+    case 'publicado':
+      return full
+    default:
+      return []
   }
 }

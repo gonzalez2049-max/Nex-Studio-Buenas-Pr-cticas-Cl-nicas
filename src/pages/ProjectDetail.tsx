@@ -5,6 +5,8 @@ import { StateBadge } from '@/components/common/StateBadge'
 import { Icon } from '@/components/common/Icon'
 import { WorkflowBar } from '@/components/projects/WorkflowBar'
 import { ObservationsPanel } from '@/components/projects/ObservationsPanel'
+import { ProjectActionsMenu } from '@/components/projects/ProjectActionsMenu'
+import { ShareDialog } from '@/components/projects/ShareDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -41,6 +43,7 @@ export function ProjectDetailPage() {
   const [tags, setTags] = React.useState('')
   const [expiresAt, setExpiresAt] = React.useState('')
   const [dirty, setDirty] = React.useState(false)
+  const [shareOpen, setShareOpen] = React.useState(false)
 
   React.useEffect(() => {
     if (project) {
@@ -107,43 +110,23 @@ export function ProjectDetailPage() {
     }
   }
 
-  const share = async () => {
-    const url = `${window.location.origin}/proyectos/${project.id}`
-    try {
-      await navigator.clipboard.writeText(url)
-      toast({ variant: 'success', title: 'Enlace copiado', description: url })
-    } catch {
-      toast({ title: 'Enlace', description: url })
-    }
-  }
-
-  const download = () => {
-    const payload = {
-      title: project.title,
-      format: project.format,
-      status: project.status,
-      description: project.description,
-      content: project.content,
-      exported_at: new Date().toISOString(),
-    }
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
-      type: 'application/json',
-    })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = `${project.title.replace(/\s+/g, '-').toLowerCase()}.json`
-    a.click()
-    URL.revokeObjectURL(a.href)
-  }
-
   return (
     <>
+      <ShareDialog project={project} open={shareOpen} onOpenChange={setShareOpen} />
       <PageHeader
         title={project.title}
-        description={`${FORMAT_LABELS[project.format]} · Actualizado ${relativeDate(project.updated_at)}`}
+        description={`${project.code ? project.code + ' · ' : ''}${FORMAT_LABELS[project.format]} · Actualizado ${relativeDate(project.updated_at)}`}
         actions={
           <div className="flex items-center gap-2">
             <StateBadge status={project.status} />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShareOpen(true)}
+            >
+              <Icon name="Share2" className="h-4 w-4" />
+              Compartir
+            </Button>
             <Button
               size="sm"
               onClick={() => navigate(`/proyectos/${project.id}/editor`)}
@@ -151,18 +134,7 @@ export function ProjectDetailPage() {
               <Icon name="PenTool" className="h-4 w-4" />
               {canEdit ? 'Abrir editor' : 'Ver en editor'}
             </Button>
-            {project.status === 'publicado' && (
-              <>
-                <Button variant="outline" size="sm" onClick={share}>
-                  <Icon name="Share2" className="h-4 w-4" />
-                  Compartir
-                </Button>
-                <Button variant="outline" size="sm" onClick={download}>
-                  <Icon name="Download" className="h-4 w-4" />
-                  Descargar
-                </Button>
-              </>
-            )}
+            <ProjectActionsMenu project={project} />
           </div>
         }
       />
@@ -332,6 +304,12 @@ export function ProjectDetailPage() {
         <div className="space-y-4">
           <Card>
             <CardContent className="space-y-3 p-5 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Código</span>
+                <span className="font-mono text-xs font-medium">
+                  {project.code ?? '—'}
+                </span>
+              </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Estado</span>
                 <StateBadge status={project.status} />

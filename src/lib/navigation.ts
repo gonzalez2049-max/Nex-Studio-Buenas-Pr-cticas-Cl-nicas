@@ -5,6 +5,8 @@ export interface NavItem {
   label: string
   /** Nombre del icono de lucide-react. */
   icon: string
+  /** Color de acento del módulo (hex). */
+  color: string
   /** Roles con acceso. `undefined` = todos. */
   roles?: Role[]
   /** Agrupación en la barra lateral. */
@@ -12,11 +14,12 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { to: '/', label: 'Inicio', icon: 'LayoutDashboard', group: 'principal' },
+  { to: '/', label: 'Inicio', icon: 'LayoutDashboard', color: '#14b8a6', group: 'principal' },
   {
     to: '/crear',
     label: 'Crear material',
     icon: 'Plus',
+    color: '#0ea5e9',
     group: 'principal',
     roles: ['admin_ubpc', 'coordinador', 'profesional_ubpc'],
   },
@@ -24,28 +27,32 @@ export const NAV_ITEMS: NavItem[] = [
     to: '/proyectos',
     label: 'Mis proyectos',
     icon: 'FolderKanban',
+    color: '#8b5cf6',
     group: 'principal',
   },
-  { to: '/plantillas', label: 'Plantillas', icon: 'LayoutTemplate', group: 'principal' },
+  { to: '/plantillas', label: 'Plantillas', icon: 'LayoutTemplate', color: '#f59e0b', group: 'principal' },
   {
     to: '/kit-champion',
     label: 'Kit Champion',
     icon: 'Sparkles',
+    color: '#ec4899',
     group: 'principal',
     roles: ['admin_ubpc', 'coordinador', 'champion'],
   },
-  { to: '/recursos', label: 'Recursos', icon: 'BookOpen', group: 'principal' },
+  { to: '/recursos', label: 'Recursos', icon: 'BookOpen', color: '#22c55e', group: 'principal' },
 
   {
     to: '/transferencia',
     label: 'Registro de transferencia',
     icon: 'Share2',
+    color: '#06b6d4',
     group: 'produccion',
   },
   {
     to: '/produccion',
     label: 'Producción UBPC',
     icon: 'Factory',
+    color: '#f97316',
     group: 'produccion',
     roles: ['admin_ubpc', 'coordinador'],
   },
@@ -54,9 +61,10 @@ export const NAV_ITEMS: NavItem[] = [
     to: '/notificaciones',
     label: 'Notificaciones',
     icon: 'Bell',
+    color: '#eab308',
     group: 'sistema',
   },
-  { to: '/configuracion', label: 'Configuración', icon: 'Settings', group: 'sistema' },
+  { to: '/configuracion', label: 'Configuración', icon: 'Settings', color: '#64748b', group: 'sistema' },
 ]
 
 export const NAV_GROUPS: { id: NavItem['group']; label: string }[] = [

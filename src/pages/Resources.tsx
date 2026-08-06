@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { ConfigNotice } from '@/components/common/ConfigNotice'
 import { EmptyState } from '@/components/common/EmptyState'
@@ -6,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useResources } from '@/hooks/queries'
+import { cn } from '@/lib/utils'
 import type { Resource } from '@/types/database'
 
 const KIND_ICON: Record<string, string> = {
@@ -17,22 +19,54 @@ const KIND_ICON: Record<string, string> = {
   documento: 'FileText',
 }
 
+/** Líneas de cuidado del Kit Champion. */
+const CHAMPION_CATEGORIES = [
+  'all',
+  'LPP',
+  'Accesos vasculares',
+  'Dolor',
+  'Caídas',
+] as const
+
 export function ResourcesPage({
   championKit = false,
 }: {
   championKit?: boolean
 }) {
-  const { data, isLoading } = useResources(championKit)
+  const [category, setCategory] = React.useState<string>('all')
+  const { data, isLoading } = useResources(
+    championKit,
+    championKit ? category : undefined,
+  )
 
   const title = championKit ? 'Kit Champion' : 'Recursos'
   const description = championKit
-    ? 'Materiales, guías y activos para impulsar la adopción de buenas prácticas en tu servicio.'
+    ? 'Materiales, guías y activos para impulsar la adopción de buenas prácticas, por línea de cuidado.'
     : 'Biblioteca institucional de guías, normativas y activos de referencia para la producción.'
 
   return (
     <>
       <PageHeader title={title} description={description} />
       <ConfigNotice />
+
+      {championKit && (
+        <div className="flex flex-wrap gap-2">
+          {CHAMPION_CATEGORIES.map((c) => (
+            <button
+              key={c}
+              onClick={() => setCategory(c)}
+              className={cn(
+                'rounded-full border px-4 py-1.5 text-sm font-medium transition-colors',
+                category === c
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'hover:bg-accent',
+              )}
+            >
+              {c === 'all' ? 'Todas' : c}
+            </button>
+          ))}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

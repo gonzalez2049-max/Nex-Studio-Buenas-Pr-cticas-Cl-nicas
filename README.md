@@ -6,9 +6,11 @@ Prácticas Clínicas (UBPC). No es una biblioteca ni una maqueta: funciona como 
 estudio editorial con un flujo de trabajo real, roles, permisos y persistencia.
 
 > **Estado.** Implementados la **arquitectura, la navegación, la base de datos,
-> los roles, los proyectos, el flujo editorial y la persistencia real**, además
-> del **editor visual funcional** con lienzo, capas, herramientas y exportación
-> propias de cada formato (PNG/PDF/PPTX).
+> los roles, el flujo editorial y la persistencia real**; el **editor visual**
+> por formato (PNG/PDF/PPTX/SVG); y la **gestión editorial completa**: edición,
+> duplicado, renombrado, filtros, archivado, eliminación, historial de versiones
+> con recuperación, revisión con comentarios y decisiones justificadas,
+> compartición con trazabilidad, códigos UBPC automáticos y notificaciones.
 
 ## Stack
 
@@ -80,6 +82,54 @@ aprobar → publicar → compartir o descargar
 Estados: `Borrador`, `En edición`, `Pendiente de revisión`, `Con observaciones`,
 `Aprobado`, `Publicado`, `Archivado`, `Vencido`. Las transiciones válidas y las
 acciones asociadas se definen en `src/lib/domain.ts` (`STATE_TRANSITIONS`).
+
+## Gestión editorial
+
+- **Mis proyectos**: editar, renombrar, duplicar, filtrar (búsqueda, estado,
+  formato, alcance, archivados), archivar/restaurar, eliminar y ver historial,
+  desde el menú de acciones de cada tarjeta.
+- **Historial de versiones**: cada guardado manual y cada cambio de estado crea
+  una instantánea; se puede **recuperar** cualquier versión (el estado actual se
+  respalda antes de restaurar).
+- **Revisión**: los revisores comentan, **solicitan cambios**, **aprueban** o
+  **rechazan con justificación** (obligatoria; queda en el hilo y notifica al
+  responsable).
+- **Flujo**: `Borrador → Revisión → Observaciones → Corrección → Aprobado →
+  Publicado` (con rechazo → archivado).
+- **Códigos institucionales**: cada material recibe automáticamente
+  `UBPC-TIPO-AÑO-CORRELATIVO` (p. ej. `UBPC-INFO-2026-0001`) mediante un
+  contador atómico en base de datos.
+- **Compartir con trazabilidad**: enlace, nivel de acceso (privado / con enlace
+  / restringido), **QR** descargable y **correo**; cada acción se registra en la
+  bitácora de actividad.
+- **Kit Champion** filtrado por línea de cuidado: **LPP, accesos vasculares,
+  dolor y caídas**.
+- **Datos de prueba**: Configuración → Administración → «Generar datos de
+  prueba» crea materiales reales recorriendo todo el flujo, con versiones,
+  observaciones y transferencias.
+
+## Exportaciones
+
+- **Componente actual**: PNG (alta resolución), PDF y **SVG** (vectorial).
+- **Documento completo**: PDF de todas las páginas (trípticos listos para
+  impresión), PNG por página y **PPTX editable** (objetos nativos de PowerPoint).
+- **Kits**: descargables completos o por componente; **checklist editable** en
+  el editor; **flujogramas** en PDF/PNG/SVG.
+
+## Despliegue
+
+El repositorio incluye configuración lista para **Vercel** (`vercel.json`) y
+**Netlify** (`netlify.toml` + `public/_redirects`), con el enrutamiento SPA ya
+resuelto. Para publicar:
+
+1. Importa el repositorio en Vercel o Netlify (framework detectado: Vite).
+2. Define las variables `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` en el
+   panel del proveedor.
+3. Aplica las migraciones de `supabase/migrations` en tu proyecto de Supabase.
+
+> **Nota honesta:** este entorno no puede aprovisionar hosting ni credenciales,
+> así que **no genero un enlace en vivo automáticamente**. Con los pasos
+> anteriores el despliegue queda en una URL propia en un par de minutos.
 
 ## Puesta en marcha
 

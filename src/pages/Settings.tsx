@@ -20,9 +20,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Link } from 'react-router-dom'
 import { useAuth, useRole } from '@/contexts/AuthContext'
 import { useTheme } from '@/contexts/ThemeContext'
-import { useProfiles, useUpdateProfileRole } from '@/hooks/queries'
+import {
+  useDashboardMetrics,
+  useGenerateSampleData,
+  useProfiles,
+  useUpdateProfileRole,
+} from '@/hooks/queries'
 import { useToast } from '@/hooks/use-toast'
 import {
   PERMISSIONS,
@@ -51,6 +57,7 @@ export function SettingsPage() {
           <TabsTrigger value="appearance">Apariencia</TabsTrigger>
           <TabsTrigger value="roles">Roles</TabsTrigger>
           {canManage && <TabsTrigger value="users">Usuarios</TabsTrigger>}
+          {canManage && <TabsTrigger value="admin">Administración</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="profile">
@@ -65,6 +72,11 @@ export function SettingsPage() {
         {canManage && (
           <TabsContent value="users">
             <UserManagement />
+          </TabsContent>
+        )}
+        {canManage && (
+          <TabsContent value="admin">
+            <AdminPanel />
           </TabsContent>
         )}
       </Tabs>
@@ -303,5 +315,87 @@ function UserManagement() {
         )}
       </CardContent>
     </Card>
+  )
+}
+
+function AdminPanel() {
+  const { toast } = useToast()
+  const generate = useGenerateSampleData()
+  const { data: metrics } = useDashboardMetrics()
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardContent className="space-y-4 p-6">
+          <div>
+            <p className="text-base font-semibold">Vista de administración</p>
+            <p className="text-sm text-muted-foreground">
+              Resumen institucional de la producción de la unidad.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              { label: 'Materiales', value: metrics?.total ?? 0 },
+              { label: 'Pendientes', value: metrics?.pendingReview ?? 0 },
+              { label: 'Publicados', value: metrics?.published ?? 0 },
+              { label: 'Por vencer', value: metrics?.expiringSoon ?? 0 },
+            ].map((m) => (
+              <div key={m.label} className="rounded-lg border p-4">
+                <p className="text-2xl font-semibold tabular-nums">{m.value}</p>
+                <p className="text-xs text-muted-foreground">{m.label}</p>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/produccion">
+                <Icon name="Factory" className="h-4 w-4" />
+                Producción UBPC
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/transferencia">
+                <Icon name="Share2" className="h-4 w-4" />
+                Registro de transferencia
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="space-y-3 p-6">
+          <div>
+            <p className="text-base font-semibold">Datos de prueba</p>
+            <p className="text-sm text-muted-foreground">
+              Genera materiales de ejemplo (persistencia real) recorriendo el
+              flujo editorial, con versiones, observaciones y transferencias.
+            </p>
+          </div>
+          <Button
+            disabled={generate.isPending}
+            onClick={async () => {
+              try {
+                const res = await generate.mutateAsync()
+                toast({
+                  variant: 'success',
+                  title: 'Datos de prueba generados',
+                  description: `${res.created} materiales creados.`,
+                })
+              } catch (e) {
+                toast({
+                  variant: 'destructive',
+                  title: 'No se pudieron generar',
+                  description: e instanceof Error ? e.message : 'Error',
+                })
+              }
+            }}
+          >
+            <Icon name="Database" className="h-4 w-4" />
+            {generate.isPending ? 'Generando…' : 'Generar datos de prueba'}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

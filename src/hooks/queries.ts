@@ -71,6 +71,17 @@ export function useDeleteProject() {
   })
 }
 
+export function useDuplicateProject() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: api.duplicateProject,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['projects'] })
+      qc.invalidateQueries({ queryKey: ['metrics'] })
+    },
+  })
+}
+
 /* --------------------------------------------------------- Plantillas */
 
 export function useTemplates(format?: Parameters<typeof api.listTemplates>[0]) {
@@ -128,6 +139,58 @@ export function useResolveObservation(projectId: string) {
   })
 }
 
+/* ------------------------------------------------------ Versiones */
+
+export function useVersions(projectId: string | undefined) {
+  return useQuery({
+    queryKey: ['versions', projectId],
+    queryFn: () => api.listVersions(projectId!),
+    enabled: enabled && Boolean(projectId),
+  })
+}
+
+export function useRestoreVersion(projectId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (version: Parameters<typeof api.restoreVersion>[1]) =>
+      api.restoreVersion(projectId, version),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['project', projectId] })
+      qc.invalidateQueries({ queryKey: ['versions', projectId] })
+      qc.invalidateQueries({ queryKey: ['projects'] })
+    },
+  })
+}
+
+/* -------------------------------------------------------- Acceso / compartir */
+
+export function useUpdateProjectAccess() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, access }: { id: string; access: Parameters<typeof api.updateProjectAccess>[1] }) =>
+      api.updateProjectAccess(id, access),
+    onSuccess: (_d, v) => {
+      qc.invalidateQueries({ queryKey: ['project', v.id] })
+      qc.invalidateQueries({ queryKey: ['projects'] })
+    },
+  })
+}
+
+/* ---------------------------------------------------------- Datos de prueba */
+
+export function useGenerateSampleData() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: api.generateSampleData,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['projects'] })
+      qc.invalidateQueries({ queryKey: ['metrics'] })
+      qc.invalidateQueries({ queryKey: ['transfer'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
+    },
+  })
+}
+
 /* ------------------------------------------------------ Transferencia */
 
 export function useTransferRecords() {
@@ -148,10 +211,10 @@ export function useCreateTransferRecord() {
 
 /* ---------------------------------------------------------- Recursos */
 
-export function useResources(championKit = false) {
+export function useResources(championKit = false, category?: string) {
   return useQuery({
-    queryKey: ['resources', championKit],
-    queryFn: () => api.listResources(championKit),
+    queryKey: ['resources', championKit, category ?? 'all'],
+    queryFn: () => api.listResources(championKit, category),
     enabled,
   })
 }

@@ -34,7 +34,11 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
                       )
                     }
                   >
-                    <Icon name={item.icon} className="h-4 w-4 shrink-0" />
+                    <Icon
+                      name={item.icon}
+                      className="h-4 w-4 shrink-0"
+                      style={{ color: item.color }}
+                    />
                     <span className="truncate">{item.label}</span>
                   </NavLink>
                 </li>

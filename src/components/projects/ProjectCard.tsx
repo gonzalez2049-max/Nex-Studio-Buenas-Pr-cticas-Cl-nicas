@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Icon } from '@/components/common/Icon'
 import { StateBadge } from '@/components/common/StateBadge'
+import { ProjectActionsMenu } from '@/components/projects/ProjectActionsMenu'
 import {
   Avatar,
   AvatarFallback,
@@ -14,7 +15,13 @@ import type { ProjectWithRelations } from '@/types/database'
 const iconFor = (fmt: string) =>
   FORMAT_DEFS.find((f) => f.id === fmt)?.icon ?? 'FileText'
 
-export function ProjectCard({ project }: { project: ProjectWithRelations }) {
+export function ProjectCard({
+  project,
+  showActions = false,
+}: {
+  project: ProjectWithRelations
+  showActions?: boolean
+}) {
   return (
     <Link
       to={`/proyectos/${project.id}`}
@@ -28,6 +35,11 @@ export function ProjectCard({ project }: { project: ProjectWithRelations }) {
         <div className="absolute right-2 top-2">
           <StateBadge status={project.status} />
         </div>
+        {showActions && (
+          <div className="absolute left-2 top-2 opacity-0 transition-opacity group-hover:opacity-100">
+            <ProjectActionsMenu project={project} />
+          </div>
+        )}
       </div>
       <div className="flex flex-1 flex-col gap-2 p-4">
         <div className="flex items-start justify-between gap-2">
@@ -36,6 +48,7 @@ export function ProjectCard({ project }: { project: ProjectWithRelations }) {
           </h3>
         </div>
         <p className="text-xs text-muted-foreground">
+          {project.code ? `${project.code} · ` : ''}
           {FORMAT_LABELS[project.format]}
         </p>
         <div className="mt-auto flex items-center justify-between pt-2">

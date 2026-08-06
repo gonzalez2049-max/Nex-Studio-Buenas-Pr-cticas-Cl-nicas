@@ -30,12 +30,16 @@ export interface Template {
   created_at: string
 }
 
+export type ProjectAccess = 'privado' | 'enlace' | 'restringido'
+
 export interface Project {
   id: string
+  code: string | null
   title: string
   description: string | null
   format: MaterialFormat
   status: ProjectState
+  access: ProjectAccess
   template_id: string | null
   content: Record<string, unknown>
   owner_id: string
@@ -47,6 +51,18 @@ export interface Project {
   expires_at: string | null
   created_at: string
   updated_at: string
+}
+
+export interface ProjectVersion {
+  id: string
+  project_id: string
+  version: number
+  content: Record<string, unknown>
+  status: ProjectState | null
+  note: string | null
+  created_by: string | null
+  created_at: string
+  author?: Pick<Profile, 'id' | 'full_name' | 'avatar_url'> | null
 }
 
 /** Proyecto con relaciones expandidas para listados y detalle. */

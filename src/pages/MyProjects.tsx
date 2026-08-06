@@ -34,13 +34,24 @@ export function MyProjectsPage() {
   const [format, setFormat] = React.useState<MaterialFormat | 'all'>('all')
   const [scope, setScope] = React.useState<'mine' | 'all'>('mine')
   const [search, setSearch] = React.useState('')
+  const [showArchived, setShowArchived] = React.useState(false)
 
-  const { data, isLoading } = useProjects({
+  const { data: raw, isLoading } = useProjects({
     status,
     format,
     ownerId: scope === 'mine' ? profile?.id : undefined,
     search: search.trim() || undefined,
   })
+
+  // Oculta archivados salvo que se pidan explícitamente.
+  const data = React.useMemo(
+    () =>
+      (raw ?? []).filter(
+        (p) =>
+          showArchived || status === 'archivado' || p.status !== 'archivado',
+      ),
+    [raw, showArchived, status],
+  )
 
   return (
     <>
@@ -117,6 +128,16 @@ export function MyProjectsPage() {
             ))}
           </SelectContent>
         </Select>
+
+        <button
+          onClick={() => setShowArchived((v) => !v)}
+          className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors ${
+            showArchived ? 'border-primary bg-accent text-primary' : 'hover:bg-accent'
+          }`}
+        >
+          <Icon name="Archive" className="h-4 w-4" />
+          Archivados
+        </button>
       </div>
 
       {/* Resultados */}
@@ -129,7 +150,7 @@ export function MyProjectsPage() {
       ) : data && data.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {data.map((p) => (
-            <ProjectCard key={p.id} project={p} />
+            <ProjectCard key={p.id} project={p} showActions />
           ))}
         </div>
       ) : (

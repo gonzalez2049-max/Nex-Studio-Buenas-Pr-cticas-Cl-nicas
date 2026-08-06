@@ -98,7 +98,7 @@ export const STATE_BADGE: Record<ProjectState, string> = {
 export const STATE_TRANSITIONS: Record<ProjectState, ProjectState[]> = {
   borrador: ['en_edicion', 'archivado'],
   en_edicion: ['pendiente_revision', 'borrador', 'archivado'],
-  pendiente_revision: ['con_observaciones', 'aprobado', 'en_edicion'],
+  pendiente_revision: ['con_observaciones', 'aprobado', 'archivado', 'en_edicion'],
   con_observaciones: ['en_edicion', 'archivado'],
   aprobado: ['publicado', 'en_edicion', 'archivado'],
   publicado: ['archivado', 'vencido'],
@@ -116,8 +116,9 @@ export const TRANSITION_ACTIONS: Partial<
 > = {
   'borrador->en_edicion': 'Continuar edición',
   'en_edicion->pendiente_revision': 'Enviar a revisión',
-  'pendiente_revision->con_observaciones': 'Devolver con observaciones',
+  'pendiente_revision->con_observaciones': 'Solicitar cambios',
   'pendiente_revision->aprobado': 'Aprobar',
+  'pendiente_revision->archivado': 'Rechazar',
   'con_observaciones->en_edicion': 'Corregir',
   'vencido->en_edicion': 'Corregir',
   'aprobado->publicado': 'Publicar',
