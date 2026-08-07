@@ -13,8 +13,12 @@ const STORAGE_KEY = 'nex-studio-theme'
 
 function getInitial(): Theme {
   if (typeof window === 'undefined') return 'light'
-  const stored = localStorage.getItem(STORAGE_KEY) as Theme | null
-  if (stored === 'light' || stored === 'dark') return stored
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null
+    if (stored === 'light' || stored === 'dark') return stored
+  } catch {
+    /* almacenamiento no disponible (p. ej. iframe restringido) */
+  }
   return window.matchMedia('(prefers-color-scheme: dark)').matches
     ? 'dark'
     : 'light'
@@ -26,7 +30,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     const root = document.documentElement
     root.classList.toggle('dark', theme === 'dark')
-    localStorage.setItem(STORAGE_KEY, theme)
+    try {
+      localStorage.setItem(STORAGE_KEY, theme)
+    } catch {
+      /* noop */
+    }
   }, [theme])
 
   const value = React.useMemo<ThemeState>(

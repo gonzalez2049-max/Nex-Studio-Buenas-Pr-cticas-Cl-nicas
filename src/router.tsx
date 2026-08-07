@@ -1,5 +1,9 @@
 import { lazy, Suspense } from 'react'
-import { createBrowserRouter, Navigate } from 'react-router-dom'
+import {
+  createBrowserRouter,
+  createHashRouter,
+  Navigate,
+} from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
 import { ProtectedRoute, RoleGate } from '@/components/auth/ProtectedRoute'
 import { PERMISSIONS } from '@/lib/domain'
@@ -39,7 +43,14 @@ import { NotificationsPage } from '@/pages/Notifications'
 import { SettingsPage } from '@/pages/Settings'
 import { NotFoundPage } from '@/pages/NotFound'
 
-export const router = createBrowserRouter([
+// Router por hash para builds embebidos (vista previa autocontenida);
+// por defecto usa el router de historial normal.
+const makeRouter =
+  import.meta.env.VITE_ROUTER === 'hash'
+    ? createHashRouter
+    : createBrowserRouter
+
+export const router = makeRouter([
   { path: '/login', element: <LoginPage /> },
   {
     path: '/proyectos/:id/editor',
