@@ -252,6 +252,38 @@ function foldPanels(name: string, kind: string): Page {
   )
 }
 
+/* ================================================================ DÍPTICO = */
+
+function foldPanels2(name: string, kind: string): Page {
+  const W = A4_L.width
+  const half = W / 2
+  return page(
+    name,
+    [
+      makeText({ text: `${kind} · Panel 1`, x: 40, y: 40, width: half - 80, height: 30, fontSize: 16, fontStyle: 'bold', fill: BRAND }),
+      makeText({ text: `${kind} · Panel 2`, x: half + 40, y: 40, width: half - 80, height: 30, fontSize: 16, fontStyle: 'bold', fill: BRAND }),
+    ],
+    { kind, folds: [1 / 2] },
+  )
+}
+
+/* ============================================================= FICHA RÁPIDA = */
+
+const A5_P = { width: 559, height: 794 }
+
+function fichaRapidaDoc(): EditorDocument {
+  const W = A5_P.width
+  return doc('ficha_rapida', A5_P, [
+    page('Ficha rápida', [
+      makeRect({ x: 0, y: 0, width: W, height: 96, fill: BRAND, cornerRadius: 0, shadow: { enabled: false, color: '#000', blur: 0, offsetX: 0, offsetY: 0 } }),
+      makeText({ text: 'FICHA RÁPIDA', x: 32, y: 24, width: W - 64, height: 22, fontSize: 14, fontStyle: 'bold', fill: '#99f6e4' }),
+      makeHeading('Título de la ficha', { x: 32, y: 48, width: W - 64, height: 38, fontSize: 26, fill: '#ffffff' }),
+      makeText({ text: '•  Punto clave uno\n•  Punto clave dos\n•  Punto clave tres', x: 32, y: 130, width: W - 64, height: 200, fontSize: 17, lineHeight: 1.6 }),
+      makeQr('https://ubpc.org/ficha-rapida'),
+    ]),
+  ], 28)
+}
+
 /* ========================================================== KIT CHAMPION == */
 
 function kitComponent(kind: string, size: { width: number; height: number }, els: EditorElement[]): Page {
@@ -545,6 +577,31 @@ export const EDITOR_FORMATS: Record<MaterialFormat, EditorFormatDef> = {
     export: { pdfOrientation: 'l', pptx: true },
     createDocument: () =>
       doc('triptico', A4_L, [foldPanels('Cara externa', 'Cara externa'), foldPanels('Cara interna', 'Cara interna')], 36),
+  },
+  diptico: {
+    size: A4_L,
+    margin: 36,
+    pageKind: 'Cara',
+    pageKindPlural: 'Caras',
+    paginated: true,
+    addablePages: [
+      { kind: 'Cara', label: 'Cara con 2 paneles', build: (i) => foldPanels2(`Cara ${i + 1}`, 'Cara') },
+    ],
+    blocks: commonBlocks,
+    export: { pdfOrientation: 'l', pptx: true },
+    createDocument: () =>
+      doc('diptico', A4_L, [foldPanels2('Cara externa', 'Cara externa'), foldPanels2('Cara interna', 'Cara interna')], 36),
+  },
+  ficha_rapida: {
+    size: A5_P,
+    margin: 28,
+    pageKind: 'Ficha',
+    pageKindPlural: 'Fichas',
+    paginated: true,
+    addablePages: [{ kind: 'Ficha', label: 'Ficha rápida', build: () => page('Ficha rápida', [makeHeading('Título', { x: 32, y: 48, width: A5_P.width - 64, height: 40 })]) }],
+    blocks: commonBlocks,
+    export: { pdfOrientation: 'p', pptx: false },
+    createDocument: fichaRapidaDoc,
   },
   kit_champion: {
     size: A4_P,

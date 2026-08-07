@@ -146,7 +146,7 @@ export function ChampionKitPage() {
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={() => navigate('/crear')}
+              onClick={() => navigate(`/crear?tema=${encodeURIComponent(guide)}`)}
               className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold shadow-lg transition-transform hover:-translate-y-0.5"
               style={{ color: MODULES.kit.color }}
             >
@@ -225,7 +225,7 @@ export function ChampionKitPage() {
                     <IconBtn title="Bajar" icon="ChevronDown" onClick={() => move(c.id, 1)} disabled={i === ordered.length - 1} />
                     <IconBtn title={hidden ? 'Mostrar' : 'Ocultar'} icon={hidden ? 'EyeOff' : 'Eye'} onClick={() => toggleHidden(c.id)} />
                     <div className="ml-auto flex items-center gap-1">
-                      <IconBtn title="Editar" icon="PenTool" onClick={() => navigate('/crear')} />
+                      <IconBtn title="Editar" icon="PenTool" onClick={() => navigate(`/crear?tema=${encodeURIComponent(guide)}`)} />
                       <IconBtn title="Descargar" icon="Download" onClick={() => download(svgFor(guide, c, guideDef.color), `kit-${guide}-${c.id}.svg`)} />
                     </div>
                   </div>
