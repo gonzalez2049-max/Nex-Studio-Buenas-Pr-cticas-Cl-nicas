@@ -47,6 +47,8 @@ export interface Project {
   thumbnail_url: string | null
   tags: string[]
   version: number
+  /** Ficha de cierre del producto (resumen + firma + envío). */
+  closure: import('@/lib/closure').ClosureCard | null
   published_at: string | null
   expires_at: string | null
   created_at: string

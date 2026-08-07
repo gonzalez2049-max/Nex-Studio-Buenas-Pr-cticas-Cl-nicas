@@ -15,6 +15,7 @@ import type {
 } from '@/types/database'
 import type { MaterialFormat, ProjectState } from '@/lib/domain'
 import { STATE_LABELS } from '@/lib/domain'
+import type { ClosureCard } from '@/lib/closure'
 
 /* ----------------------------------------------------------- Perfiles */
 
@@ -247,6 +248,44 @@ export async function transitionProject(args: {
   }
 
   return updated
+}
+
+/* ------------------------------------------------- Ficha de cierre */
+
+/** Guarda la ficha de cierre en el proyecto. */
+export async function saveClosure(
+  projectId: string,
+  closure: ClosureCard,
+): Promise<void> {
+  const { error } = await supabase
+    .from('projects')
+    .update({ closure })
+    .eq('id', projectId)
+  if (error) throw error
+}
+
+/**
+ * Envía la ficha firmada al Coordinador: guarda la ficha, registra la fecha de
+ * envío, cambia el estado a pendiente de revisión y notifica.
+ */
+export async function sendClosure(args: {
+  project: Project
+  closure: ClosureCard
+  reviewerId?: string | null
+}): Promise<void> {
+  const { project, closure, reviewerId } = args
+  await saveClosure(project.id, closure)
+  await transitionProject({
+    project,
+    to: 'pendiente_revision',
+    reviewerId: reviewerId ?? undefined,
+    note: 'Ficha de cierre enviada al Coordinador.',
+  })
+  await logActivity({
+    project_id: project.id,
+    action: 'closure_sent',
+    meta: { impacted: closure.impacted },
+  })
 }
 
 /* ----------------------------------------------------- Versiones */

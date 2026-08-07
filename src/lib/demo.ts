@@ -16,7 +16,8 @@ import type {
   TransferRecord,
 } from '@/types/database'
 import type { MaterialFormat, ProjectState } from '@/lib/domain'
-import { STATE_LABELS } from '@/lib/domain'
+import { FORMAT_LABELS, STATE_LABELS } from '@/lib/domain'
+import type { ClosureCard } from '@/lib/closure'
 import { getFormatDef } from '@/editor/formats'
 import type { ProjectFilters } from '@/lib/api'
 import type { DashboardMetrics } from '@/lib/api'
@@ -80,6 +81,37 @@ function content(spec: Spec): Record<string, unknown> {
   }
 }
 
+/** Fichas de cierre ya enviadas (para el Coordinador y Producción). */
+const CLOSURES: Record<string, Partial<ClosureCard>> = {
+  d2: { topics: 'Inserción y mantenimiento de CVC, higiene de manos, retiro oportuno', audience: 'Personal de enfermería de UCI', impacted: 45, unit: 'UBPC · UCI y Hospitalización', observations: 'Material alineado a la guía institucional de accesos vasculares.', signedBy: 'Lic. Ana Pérez', signedRole: 'Profesional de enfermería', sentDays: 0 } as never,
+  d1: { topics: 'Escala de Braden, reposicionamiento, superficies de apoyo', audience: 'Enfermería y auxiliares', impacted: 80, unit: 'UBPC · Toda la unidad', observations: 'Difusión priorizada en servicios de mayor riesgo.', signedBy: 'Lic. Ana Pérez', signedRole: 'Profesional de enfermería', sentDays: 3 } as never,
+}
+
+function demoClosure(spec: Spec): ClosureCard | null {
+  const c = CLOSURES[spec.id] as (Partial<ClosureCard> & { signedBy?: string; signedRole?: string; sentDays?: number }) | undefined
+  if (!c) return null
+  const sent = iso(c.sentDays ?? 0)
+  return {
+    product_name: spec.title,
+    material_type: FORMAT_LABELS[spec.format],
+    created_at: iso(spec.updated + 10),
+    closed_at: iso(spec.updated + 1),
+    professional: c.signedBy ?? 'Lic. Ana Pérez',
+    guide: spec.tags[0] ?? '',
+    topics: c.topics ?? '',
+    audience: c.audience ?? '',
+    impacted: c.impacted ?? 0,
+    unit: c.unit ?? '',
+    code: spec.code,
+    version: 2,
+    status: spec.status,
+    material_link: `/proyectos/${spec.id}`,
+    observations: c.observations ?? '',
+    signature: { name: c.signedBy ?? 'Lic. Ana Pérez', role: c.signedRole ?? 'Profesional UBPC', signed_at: sent, confirmed: true },
+    sent_at: sent,
+  }
+}
+
 export const DEMO_PROJECTS: ProjectWithRelations[] = SPECS.map((s) => ({
   id: s.id,
   code: s.code,
@@ -95,6 +127,7 @@ export const DEMO_PROJECTS: ProjectWithRelations[] = SPECS.map((s) => ({
   thumbnail_url: null,
   tags: s.tags,
   version: 1,
+  closure: demoClosure(s),
   published_at: s.status === 'publicado' ? iso(s.updated) : null,
   expires_at: s.expires != null ? iso(s.expires) : null,
   created_at: iso(s.updated + 10),

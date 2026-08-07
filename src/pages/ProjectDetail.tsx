@@ -7,6 +7,11 @@ import { WorkflowBar } from '@/components/projects/WorkflowBar'
 import { ObservationsPanel } from '@/components/projects/ObservationsPanel'
 import { ProjectActionsMenu } from '@/components/projects/ProjectActionsMenu'
 import { ShareDialog } from '@/components/projects/ShareDialog'
+import { ClosureCardView } from '@/components/projects/ClosureCardView'
+import { ClosureCardDialog } from '@/components/projects/ClosureCardDialog'
+import { EmptyState } from '@/components/common/EmptyState'
+import { loadClosure } from '@/lib/closure'
+import type { ProjectWithRelations } from '@/types/database'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -164,6 +169,7 @@ export function ProjectDetailPage() {
               <TabsTrigger value="review">
                 Revisión
               </TabsTrigger>
+              <TabsTrigger value="closure">Ficha de cierre</TabsTrigger>
             </TabsList>
 
             {/* Editor ligero (metadatos). El editor visual llega en la
@@ -297,6 +303,10 @@ export function ProjectDetailPage() {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            <TabsContent value="closure">
+              <ClosureTab project={project} />
+            </TabsContent>
           </Tabs>
         </div>
 
@@ -374,5 +384,60 @@ export function ProjectDetailPage() {
         </div>
       </div>
     </>
+  )
+}
+
+/** Pestaña de la Ficha de cierre del producto. */
+function ClosureTab({ project }: { project: ProjectWithRelations }) {
+  const role = useRole()
+  const [open, setOpen] = React.useState(false)
+  const [refresh, setRefresh] = React.useState(0)
+  const closure = React.useMemo(
+    () => loadClosure(project),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [project, refresh],
+  )
+  const canManage = PERMISSIONS.canCreateMaterial(role)
+  const sent = Boolean(closure?.sent_at)
+
+  return (
+    <div className="space-y-4">
+      {closure ? (
+        <>
+          <ClosureCardView card={closure} />
+          {canManage && !sent && (
+            <div className="flex justify-end">
+              <Button onClick={() => setOpen(true)}>
+                <Icon name="PenLine" className="h-4 w-4" />
+                Continuar ficha
+              </Button>
+            </div>
+          )}
+        </>
+      ) : (
+        <EmptyState
+          icon="FileCheck2"
+          title="Ficha de cierre del producto"
+          description="Al terminar el material, genera la tarjeta resumen para enviarla al Coordinador: impacto, temas, firma electrónica y envío."
+          action={
+            canManage && (
+              <Button onClick={() => setOpen(true)}>
+                <Icon name="FilePlus2" className="h-4 w-4" />
+                Generar ficha de cierre
+              </Button>
+            )
+          }
+        />
+      )}
+
+      <ClosureCardDialog
+        project={project}
+        open={open}
+        onOpenChange={(o) => {
+          setOpen(o)
+          if (!o) setRefresh((r) => r + 1)
+        }}
+      />
+    </div>
   )
 }

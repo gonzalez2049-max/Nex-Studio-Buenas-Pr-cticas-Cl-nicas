@@ -13,6 +13,7 @@ import {
   type ProjectState,
 } from '@/lib/domain'
 import { MODULES } from '@/lib/modules'
+import { loadClosure } from '@/lib/closure'
 import { relativeDate } from '@/lib/format'
 
 /** Columnas del tablero de producción (flujo editorial). */
@@ -42,6 +43,24 @@ export function ProductionPage() {
         compact
       />
       <ConfigNotice />
+
+      {/* Respaldo institucional: fichas de cierre */}
+      <div className="flex items-center gap-3 rounded-2xl border bg-card p-4 surface">
+        <span
+          className="flex h-11 w-11 items-center justify-center rounded-xl"
+          style={{ background: '#10b9811f', color: '#10b981' }}
+        >
+          <Icon name="FileCheck2" className="h-5 w-5" />
+        </span>
+        <div className="mr-auto">
+          <p className="text-2xl font-semibold tabular-nums">
+            {(projects ?? []).filter((p) => loadClosure(p)?.sent_at).length}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Fichas de cierre enviadas · respaldo institucional del producto
+          </p>
+        </div>
+      </div>
 
       {/* Resumen por estado */}
       <div className="grid gap-3 sm:grid-cols-4 lg:grid-cols-8">
@@ -103,6 +122,12 @@ export function ProductionPage() {
                         <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground">
                           <Icon name="FileText" className="h-3 w-3" />
                           {FORMAT_LABELS[p.format]}
+                          {loadClosure(p)?.sent_at && (
+                            <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                              <Icon name="FileCheck2" className="h-3 w-3" />
+                              Ficha
+                            </span>
+                          )}
                         </div>
                         <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
                           <span>{p.owner?.full_name ?? '—'}</span>

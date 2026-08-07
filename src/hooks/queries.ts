@@ -6,6 +6,8 @@ import {
 import * as api from '@/lib/api'
 import * as demo from '@/lib/demo'
 import { isSupabaseConfigured } from '@/lib/supabase'
+import { persistClosureLocal, type ClosureCard } from '@/lib/closure'
+import type { Project } from '@/types/database'
 
 /**
  * Si Supabase está configurado usamos la API real; si no, servimos datos demo
@@ -168,6 +170,38 @@ export function useRestoreVersion(projectId: string) {
       qc.invalidateQueries({ queryKey: ['project', projectId] })
       qc.invalidateQueries({ queryKey: ['versions', projectId] })
       qc.invalidateQueries({ queryKey: ['projects'] })
+    },
+  })
+}
+
+/* ------------------------------------------------- Ficha de cierre */
+
+export function useSaveClosure() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ projectId, closure }: { projectId: string; closure: ClosureCard }) => {
+      if (cfg) await api.saveClosure(projectId, closure)
+      else persistClosureLocal(projectId, closure)
+    },
+    onSuccess: (_d, { projectId }) => {
+      qc.invalidateQueries({ queryKey: ['project', projectId] })
+      qc.invalidateQueries({ queryKey: ['projects'] })
+    },
+  })
+}
+
+export function useSendClosure() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ project, closure, reviewerId }: { project: Project; closure: ClosureCard; reviewerId?: string | null }) => {
+      if (cfg) await api.sendClosure({ project, closure, reviewerId })
+      else persistClosureLocal(project.id, closure)
+    },
+    onSuccess: (_d, { project }) => {
+      qc.invalidateQueries({ queryKey: ['project', project.id] })
+      qc.invalidateQueries({ queryKey: ['projects'] })
+      qc.invalidateQueries({ queryKey: ['metrics'] })
+      qc.invalidateQueries({ queryKey: ['activity'] })
     },
   })
 }

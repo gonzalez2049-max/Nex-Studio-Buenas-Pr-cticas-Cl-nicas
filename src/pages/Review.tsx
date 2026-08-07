@@ -27,11 +27,14 @@ import {
   useObservations,
   useProfiles,
   useProjects,
+  useVersions,
 } from '@/hooks/queries'
+import { ClosureCardView } from '@/components/projects/ClosureCardView'
+import { loadClosure } from '@/lib/closure'
 import { useToast } from '@/hooks/use-toast'
 import { MODULES } from '@/lib/modules'
 import { cn, initials } from '@/lib/utils'
-import { relativeDate } from '@/lib/format'
+import { relativeDate, shortDate } from '@/lib/format'
 import {
   FORMAT_DEFS,
   FORMAT_LABELS,
@@ -240,6 +243,7 @@ function ReviewWorkspace({ project }: { project: ProjectWithRelations }) {
     pages.length > 0
       ? `data:image/svg+xml;utf8,${encodeURIComponent(pageToSvg(doc, pages[0]))}`
       : null
+  const closure = loadClosure(project)
 
   const targets = ['General', ...pages.map((_, i) => `Página ${i + 1}`), 'Elemento seleccionado']
 
@@ -316,11 +320,23 @@ function ReviewWorkspace({ project }: { project: ProjectWithRelations }) {
 
         {/* Comentarios e historial */}
         <div className="rounded-2xl border bg-card p-4 surface">
-          <Tabs defaultValue="comentarios">
+          <Tabs defaultValue="ficha">
             <TabsList>
+              <TabsTrigger value="ficha">Ficha</TabsTrigger>
               <TabsTrigger value="comentarios">Comentarios</TabsTrigger>
               <TabsTrigger value="historial">Historial</TabsTrigger>
+              <TabsTrigger value="versiones">Versiones</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="ficha">
+              {closure ? (
+                <ClosureCardView card={closure} />
+              ) : (
+                <p className="rounded-lg border border-dashed py-8 text-center text-sm text-muted-foreground">
+                  El profesional aún no ha enviado la ficha de cierre.
+                </p>
+              )}
+            </TabsContent>
 
             <TabsContent value="comentarios" className="space-y-3">
               <div className="flex flex-wrap gap-1.5">
@@ -357,10 +373,40 @@ function ReviewWorkspace({ project }: { project: ProjectWithRelations }) {
             <TabsContent value="historial">
               <CommentList observations={observations} history />
             </TabsContent>
+
+            <TabsContent value="versiones">
+              <VersionsList projectId={project.id} />
+            </TabsContent>
           </Tabs>
         </div>
       </div>
     </div>
+  )
+}
+
+function VersionsList({ projectId }: { projectId: string }) {
+  const { data: versions } = useVersions(projectId)
+  if (!versions || versions.length === 0) {
+    return (
+      <p className="rounded-lg border border-dashed py-8 text-center text-sm text-muted-foreground">
+        Sin versiones registradas.
+      </p>
+    )
+  }
+  return (
+    <ul className="space-y-2">
+      {versions.map((v) => (
+        <li key={v.id} className="flex items-center justify-between rounded-lg border p-3">
+          <div>
+            <p className="text-sm font-medium">Versión {v.version}</p>
+            <p className="text-xs text-muted-foreground">
+              {v.note ?? 'Sin nota'} · {v.author?.full_name ?? 'Alguien'}
+            </p>
+          </div>
+          <span className="text-xs text-muted-foreground">{shortDate(v.created_at)}</span>
+        </li>
+      ))}
+    </ul>
   )
 }
 
